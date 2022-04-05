@@ -1,30 +1,3 @@
-import sys
-import numpy as np
-import pandas as pd
-from scipy.linalg import expm
-from scipy.stats import truncexpon
-from scipy.stats import expon
-from scipy.special import comb
-import ast
-import multiprocessing as mp
-
-from cutpoints_ABC import cutpoints_ABC
-from get_ABC_inf_bis import get_ABC_inf_bis
-from vanloan_3 import vanloan_3
-from get_times import get_times
-from get_tab_AB import get_tab_AB
-from get_ordered import get_ordered
-from vanloan_2 import vanloan_2
-from cutpoints_AB import cutpoints_AB
-from instant_mat import instant_mat
-from vanloan_1 import vanloan_1
-from get_ABC import get_ABC
-from get_tab_ABC import get_tab_ABC
-from get_joint_prob_mat import get_joint_prob_mat
-from combine_states import combine_states
-from load_trans_mat import load_trans_mat
-from trans_mat_num import trans_mat_num
-
 def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n_int_AB):
     """
     This functions returns a table with joint probabilities of
@@ -231,7 +204,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         times_ABC = get_times(cut_ABC, [0, L, L+1, r])
                         p_ABC = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                         for i in [3, 5, 6]:
-                            # 70 -> 7i
                             if cut_ABC[r+1] != np.inf:
                                 res = vanloan_1(
                                     trans_mat_ABC, (omega_70, dct_omegas['omega_7%s'%i]),
@@ -248,18 +220,15 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
                                 acc_tot += 2
                     elif L == r == R:
-                        omegas_ABC = [omega_tot_ABC, omega_10, omega_77]
-                        times_ABC = get_times(cut_ABC, [0, L, L+1])
+                        omegas_ABC = [omega_tot_ABC, omega_10]
+                        times_ABC = get_times(cut_ABC, [0, L])
                         p_ABC = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
-                        if cut_ABC[r+1] == np.inf:
-                            for i in [3, 5, 6]:
-                                # 10 -> 1i
+                        for i in [3, 5, 6]:
+                            if cut_ABC[r+1] == np.inf:
                                 A_mat = instant_mat(omega_10, dct_omegas['omega_1%s'%i], trans_mat_ABC)
                                 res_1 = (-np.linalg.inv(trans_mat_ABC[:-2,:-2])@(A_mat[:-2,:-2]))[omega_10][:,dct_omegas['omega_1%s'%i]]
-                                # 10 -> 7i
                                 A_mat = instant_mat(omega_10, dct_omegas['omega_7%s'%i], trans_mat_ABC)
                                 res_2 = (-np.linalg.inv(trans_mat_ABC[:-2,:-2])@(A_mat[:-2,:-2]))[omega_10][:,dct_omegas['omega_7%s'%i]]
-                                # 10 -> 70 -> 7i
                                 A_mat_1 = instant_mat(omega_10, omega_70, trans_mat_ABC)
                                 A_mat_2 = instant_mat(omega_70, dct_omegas['omega_7%s'%i], trans_mat_ABC)
                                 C_mat_upper =  np.concatenate((trans_mat_ABC[:-2,:-2], A_mat_1[:-2,:-2]), axis = 1)
@@ -270,11 +239,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC@res_1).sum()+(pi@p_ABC@sum([res_2, res_3])).sum()]
                                 tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
                                 acc_tot += 2
-                        else:
-                            omegas_ABC = [omega_tot_ABC, omega_10]
-                            times_ABC = get_times(cut_ABC, [0, L])
-                            p_ABC = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
-                            for i in [3, 5, 6]:
+                            else:
                                 omega_lst = ['10', '1%s'%i, '17', '70', '7%s'%i, '77']
                                 iter_lst = []
                                 for y in range(1, len(omega_lst)):
@@ -304,7 +269,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         times_ABC = get_times(cut_ABC, [r+1, L, L+1])
                         p_ABC_end = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                         for i in [3, 5, 6]:
-                            # 10 -> 1i
                             A_mat = instant_mat(omega_10, dct_omegas['omega_1%s'%i], trans_mat_ABC)
                             C_mat_upper = np.concatenate((trans_mat_ABC, A_mat), axis = 1)
                             C_mat_lower = np.concatenate((np.zeros((203,203)), trans_mat_ABC), axis = 1)
@@ -329,7 +293,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
     # and l < L, and 4  represents a multiple merger event where l = L. Remember that the probability 
     # of ((i, l, L) -> (j, r, R)) and that of ((j, r, R) -> (i, l, L)) is the same. Also,
     # ((i, l, L) -> (1, r, R)) = ((i, l, L) -> (2, r, R)) = ((i, l, L) -> (3, r, R)), following ILS.
-    acc = 0
     cond = [i == ('D','D') for i in names_tab_AB]
     pi = pi_ABC[cond]
     for l in range(n_int_ABC):
