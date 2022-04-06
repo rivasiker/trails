@@ -1,3 +1,5 @@
+import pandas as pd
+
 def combine_states(iter_lst_a, iter_lst_b, probs_a, probs_b):
     """
     Given two lists of states and their probabilities, this

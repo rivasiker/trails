@@ -1,3 +1,5 @@
+import numpy as np
+
 def get_ordered(p_ABC, omega_end, omega_tot):
     """
     This functions orders a list of probabilities given

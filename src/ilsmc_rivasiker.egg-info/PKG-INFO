@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: ilsmc-rivasiker
-Version: 0.0.3
+Version: 0.0.5
 Summary: A phylogenetically aware SMC to infer the evolutionary history of species
 Home-page: https://github.com/rivasiker/ilsmc
 Author: Iker Rivas-González
