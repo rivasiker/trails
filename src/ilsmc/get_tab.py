@@ -7,6 +7,35 @@ from ilsmc.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
 from ilsmc.get_times import get_times
 from ilsmc.get_ordered import get_ordered
 
+def precomp(trans_mat, times):
+    dct = {}
+    for i in range(len(times)):
+        dct[i] = expm(trans_mat*times[i])
+    return dct
+
+def get_ABC_precomp(dct, omegas):
+    """
+    This function calculates the joint probabilities
+    for the two-sequence CTMC.
+    
+    Parameters
+    ----------
+    trans_mat : numpy array
+        The transition rate matrix of the two-sequence CTMC
+    times : list of numbers
+        Time intervals for each matrix multiplication
+    omegas : list of lists
+        Sets of states for each matrix multiplication
+    """
+    # Calculate first multiplication
+    g = dct[0][omegas[0]][:,omegas[1]]
+    # For each of the remaining omegas
+    for i in range(1, len(dct)):
+        # Perform multiplication
+        g = g @ dct[i][omegas[i]][:,omegas[i+1]]
+    # Return a numpy array that contains the probabilities in the right order.
+    return g
+
 def get_tab_AB(state_space_AB, trans_mat_AB, cut_AB, pi_AB):
     """
     This functions returns a table with joint probabilities of
@@ -24,6 +53,8 @@ def get_tab_AB(state_space_AB, trans_mat_AB, cut_AB, pi_AB):
     pi_AB : list of floats
         Starting probabilities after merging two one-sequence CTMCs. 
     """
+    tm = get_times(cut_AB, list(range(len(cut_AB))))
+    pr = precomp(trans_mat_AB, tm)
     
     ###############################
     ### State-space information ###
@@ -59,11 +90,12 @@ def get_tab_AB(state_space_AB, trans_mat_AB, cut_AB, pi_AB):
     ############################################
     
     # A pair of sites whose fate is to be of deep coalescence is represented as (('D'), ('D')).
-    p_ABC = pi_AB @ get_ABC(trans_mat_AB, [cut_AB[-1]-cut_AB[0]], [omega_tot_AB, omega_B])
+    omegas = [omega_tot_AB]+[omega_B]*(n_int_AB)
+    p_ABC = pi_AB @ get_ABC_precomp(pr, omegas)
     tab[acc] = get_ordered(p_ABC, omega_B, omega_tot_AB)
     tab_names.append((('D'), ('D')))
     acc += 1
-    
+
     
     
     ##############################
@@ -76,9 +108,8 @@ def get_tab_AB(state_space_AB, trans_mat_AB, cut_AB, pi_AB):
     # left coalescent happens. Remember that the probability of ((0, L) -> ('D')) is the same as
     # that of (('D'), (0, L)).
     for L in range(n_int_AB):
-        times = get_times(cut_AB, [0, L, L+1, -1])
-        omegas = [omega_tot_AB, omega_B, omega_L, omega_L]
-        p_ABC = pi_AB @ get_ABC(trans_mat_AB, times, omegas)
+        omegas = [omega_tot_AB]+[omega_B]*L+[omega_L]*(n_int_AB-L)
+        p_ABC = pi_AB @ get_ABC_precomp(pr, omegas)
         p_ABC = get_ordered(p_ABC, omega_L, omega_tot_AB)
         tab[acc] = p_ABC
         tab_names.append(((0, L), ('D')))
@@ -99,22 +130,22 @@ def get_tab_AB(state_space_AB, trans_mat_AB, cut_AB, pi_AB):
     for L in range(n_int_AB):
         for R in range(L, n_int_AB):
             if R == L:
-                times = get_times(cut_AB, [0, L, L+1, -1])
-                omegas = [omega_tot_AB, omega_B, omega_E, omega_E]
-                p_ABC = pi_AB @ get_ABC(trans_mat_AB, times, omegas)
+                omegas = [omega_tot_AB]+[omega_B]*L+[omega_E]*(n_int_AB-L)
+                p_ABC = pi_AB @ get_ABC_precomp(pr, omegas)
                 tab[acc] = get_ordered(p_ABC, omega_E, omega_tot_AB)
                 tab_names.append(((0, L), (0, R)))
                 acc += 1
+
             elif L < R:
-                times = get_times(cut_AB, [0, L, L+1, R, R+1, -1])
-                omegas = [omega_tot_AB, omega_B, omega_L, omega_L, omega_E, omega_E]
-                p_ABC = pi_AB @ get_ABC(trans_mat_AB, times, omegas)
+                omegas = [omega_tot_AB]+[omega_B]*L+[omega_L]*(R-L)+[omega_E]*(n_int_AB-R)
+                p_ABC = pi_AB @ get_ABC_precomp(pr, omegas)
                 p_ABC = get_ordered(p_ABC, omega_E, omega_tot_AB)
                 tab[acc] = p_ABC
                 tab_names.append(((0, L), (0, R)))
                 tab[acc+1] = p_ABC
                 tab_names.append(((0, R), (0, L)))
                 acc += 2
+
                 
     return tab_names, tab
 
@@ -241,8 +272,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for l in range(n_int_AB):
                             cond = [i == ((0, l), 'D') for i in names_tab_AB]
                             pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (i, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(i, r, R), (0, l, L), tab[acc_tot][2]]
+                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
+                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
                             acc_tot += 2
                 elif L == r < R:
                     times_ABC = get_times(cut_ABC, [0, L, L+1, R, R+1])
@@ -254,8 +285,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for l in range(n_int_AB):
                             cond = [i == ((0, l), 'D') for i in names_tab_AB]
                             pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (i, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(i, r, R), (0, l, L), tab[acc_tot][2]]
+                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
+                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
                             acc_tot += 2
                 elif r < L < R:
                     times_ABC = get_times(cut_ABC, [0, r, r+1, L, L+1, R, R+1])
@@ -267,8 +298,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for l in range(n_int_AB):
                             cond = [i == ((0, l), 'D') for i in names_tab_AB]
                             pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (i, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(i, r, R), (0, l, L), tab[acc_tot][2]]
+                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
+                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
                             acc_tot += 2
                 elif r < L == R:
                     times_ABC = get_times(cut_ABC, [0, r, r+1, L, L+1])
@@ -280,8 +311,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for l in range(n_int_AB):
                             cond = [i == ((0, l), 'D') for i in names_tab_AB]
                             pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (i, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(i, r, R), (0, l, L), tab[acc_tot][2]]
+                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
+                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
                             acc_tot += 2
                 elif r < R < L:
                     times_ABC = get_times(cut_ABC, [0, r, r+1, R, R+1, L, L+1])
@@ -293,8 +324,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for l in range(n_int_AB):
                             cond = [i == ((0, l), 'D') for i in names_tab_AB]
                             pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (i, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(i, r, R), (0, l, L), tab[acc_tot][2]]
+                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
+                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
                             acc_tot += 2
                 elif L < r == R:
                     omegas_ABC = [omega_tot_ABC, om['10'], om['70'], om['70']]
