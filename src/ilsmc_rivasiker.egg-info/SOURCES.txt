@@ -3,9 +3,6 @@ MANIFEST.in
 README.md
 pyproject.toml
 setup.py
-./trans_mat/trans_mat_full_1.csv
-./trans_mat/trans_mat_full_2.csv
-./trans_mat/trans_mat_full_3.csv
 src/ilsmc/__init__.py
 src/ilsmc/combine_states.py
 src/ilsmc/cutpoints.py
@@ -16,6 +13,9 @@ src/ilsmc/get_tab.py
 src/ilsmc/get_times.py
 src/ilsmc/load_trans_mat.py
 src/ilsmc/vanloan.py
+src/ilsmc/data/trans_mat_full_1.csv
+src/ilsmc/data/trans_mat_full_2.csv
+src/ilsmc/data/trans_mat_full_3.csv
 src/ilsmc_rivasiker.egg-info/PKG-INFO
 src/ilsmc_rivasiker.egg-info/SOURCES.txt
 src/ilsmc_rivasiker.egg-info/dependency_links.txt

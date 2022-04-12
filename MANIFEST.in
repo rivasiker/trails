@@ -1,1 +1,1 @@
-recursive-include ./trans_mat *.csv
+global-include *.csv

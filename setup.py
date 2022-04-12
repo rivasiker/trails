@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="ilsmc-rivasiker",
-    version="0.0.5",
+    version="0.0.6",
     author="Iker Rivas-González",
     author_email="irg@birc.au.dk",
     description="A phylogenetically aware SMC to infer the evolutionary history of species",
