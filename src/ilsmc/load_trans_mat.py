@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pkg_resources
 
 def load_trans_mat(n_seq):
     """
@@ -11,8 +12,10 @@ def load_trans_mat(n_seq):
         Number of sequences of the CTMC
     """
     
+    stream = pkg_resources.resource_stream(__name__, 'data/trans_mat_full_'+str(n_seq)+'.csv')
+
     # Read string data frame for the CTMC
-    df = pd.read_csv('trans_mat/trans_mat_full_'+str(n_seq)+'.csv')
+    df = pd.read_csv(stream)
     
     # Create dictionary with all CTMC state names and their index
     df_2 = {
