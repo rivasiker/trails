@@ -5,9 +5,7 @@ Summary: A phylogenetically aware SMC to infer the evolutionary history of speci
 Home-page: https://github.com/rivasiker/ilsmc
 Author: Iker Rivas-González
 Author-email: irg@birc.au.dk
-License: UNKNOWN
 Project-URL: Bug Tracker, https://github.com/rivasiker/ilsmc/issues
-Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
@@ -47,4 +45,3 @@ pd.DataFrame(arr, columns=['From', 'To', 'Prob'])
 
 [729 rows x 3 columns]
 ```
-
