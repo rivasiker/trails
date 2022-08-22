@@ -469,12 +469,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for i in [3, 5, 6]:
                             for j in [3, 5, 6]:
                                 # 00 -> i0 -> 70 -> 7j -> 77
-                                # omegas_ABC = [omega_tot_ABC, om['00'], 
-                                #               om['%s0'%i], om['%s0'%i], 
-                                #               om['70'], om['70'], 
-                                #               om['7%s'%j], om['7%s'%j], 
-                                #               om['77']]
-                                # p_ABC_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                                 omegas = [omega_tot_ABC]+[om['00']]*l+[om['%s0'%i]]*(L-l)+[om['70']]*(r-L)+[om['7%s'%j]]*(R-r)+[om['77']]
                                 p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
                                 ii = dct_num[i]
@@ -487,11 +481,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for i in [3, 5, 6]:
                             for j in [3, 5, 6]:
                                 # 00 -> i0 -> 7j -> 77
-                                # omegas_ABC = [omega_tot_ABC, om['00'], 
-                                #               om['%s0'%i], om['%s0'%i], 
-                                #               om['7%s'%j], om['7%s'%j], 
-                                #               om['77']]
-                                # p_ABC_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                                 omegas = [omega_tot_ABC]+[om['00']]*l+[om['%s0'%i]]*(L-l)+[om['7%s'%j]]*(R-L)+[om['77']]
                                 p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
                                 ii = dct_num[i]
@@ -504,11 +493,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for i in [3, 5, 6]:
                             for j in [3, 5, 6]:
                                 # 00 -> ij -> 7j -> 77
-                                # omegas_ABC = [omega_tot_ABC, om['00'], 
-                                #               om['%s%s'%(i,j)], om['%s%s'%(i,j)], 
-                                #               om['7%s'%j], om['7%s'%j], 
-                                #               om['77']]
-                                # p_ABC_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                                 omegas = [omega_tot_ABC]+[om['00']]*l+[om['%s%s'%(i,j)]]*(L-l)+[om['7%s'%j]]*(R-L)+[om['77']]
                                 p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
                                 ii = dct_num[i]
@@ -521,12 +505,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for i in [3, 5, 6]:
                             for j in [3, 5, 6]:
                                 # 00 -> i0 -> ij -> 7j -> 77
-                                # omegas_ABC = [omega_tot_ABC, om['00'], 
-                                #               om['%s0'%i], om['%s0'%i], 
-                                #               om['%s%s'%(i,j)], om['%s%s'%(i,j)],
-                                #               om['7%s'%j], om['7%s'%j], 
-                                #               om['77']]
-                                # p_ABC_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                                 omegas = [omega_tot_ABC]+[om['00']]*l+[om['%s0'%i]]*(r-l)+[om['%s%s'%(i,j)]]*(L-r)+[om['7%s'%j]]*(R-L)+[om['77']]
                                 p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
                                 ii = dct_num[i]
@@ -539,12 +517,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for i in [3, 5, 6]:
                             for j in [3, 5, 6]:
                                 # 00 -> 0j -> ij -> 7j -> 77
-                                # omegas_ABC = [omega_tot_ABC, om['00'], 
-                                #               om['0%s'%j], om['0%s'%j], 
-                                #               om['%s%s'%(i,j)], om['%s%s'%(i,j)],
-                                #               om['7%s'%j], om['7%s'%j], 
-                                #               om['77']]
-                                # p_ABC_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                                 omegas = [omega_tot_ABC]+[om['00']]*r+[om['0%s'%j]]*(l-r)+[om['%s%s'%(i,j)]]*(L-l)+[om['7%s'%j]]*(R-L)+[om['77']]
                                 p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
                                 ii = dct_num[i]
@@ -557,10 +529,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for i in [3, 5, 6]:
                             for j in [3, 5, 6]:
                                 # 00 -> ij -> 77
-                                # omegas_ABC = [omega_tot_ABC, om['00'], 
-                                #               om['%s%s'%(i,j)], om['%s%s'%(i,j)],
-                                #               om['77']]
-                                # p_ABC_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                                 omegas = [omega_tot_ABC]+[om['00']]*l+[om['%s%s'%(i,j)]]*(L-l)+[om['77']]
                                 p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
                                 ii = dct_num[i]
@@ -572,11 +540,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         for i in [3, 5, 6]:
                             for j in [3, 5, 6]:
                                 # 00 -> i0 -> ij -> 77
-                                # omegas_ABC = [omega_tot_ABC, om['00'], 
-                                #               om['%s0'%i], om['%s0'%i], 
-                                #               om['%s%s'%(i,j)], om['%s%s'%(i,j)],
-                                #               om['77']]
-                                # p_ABC_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                                 omegas = [omega_tot_ABC]+[om['00']]*l+[om['%s0'%i]]*(r-l)+[om['%s%s'%(i,j)]]*(R-r)+[om['77']]
                                 p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
                                 ii = dct_num[i]
@@ -585,9 +548,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 tab[acc_tot+1] = [(jj, r, R), (ii, l, L), tab[acc_tot][2]]
                                 acc_tot += 2
                     elif l == r == L == R:
-                        # times_ABC = get_times(cut_ABC, [0, l])
-                        # omegas_ABC = [omega_tot_ABC, om['00']]
-                        # start_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                         omegas = [omega_tot_ABC]+[om['00']]*R
                         p_ABC_pre = get_ABC_precomp(pr, omegas, list(range(R)))
                         start = p_ABC_pre[:,om['00']] if L==0 else p_ABC_pre
@@ -703,12 +663,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     tab[acc_tot] = [(ii, l, L), (jj, r, R), res_tot]
                                     acc_tot += 1
                     elif l == L < r == R:
-                        # times_ABC = get_times(cut_ABC, [0, l])
-                        # omegas_ABC = [omega_tot_ABC, om['00']]
-                        # start_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
-                        # times_ABC = get_times(cut_ABC, [l+1, r])
-                        # omegas_ABC = [om['70'], om['70']]
-                        # end_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                         omegas = [omega_tot_ABC]+[om['00']]*L
                         p_ABC_pre = get_ABC_precomp(pr, omegas, list(range(L)))
                         start = p_ABC_pre[:,om['00']] if L==0 else p_ABC_pre
@@ -743,14 +697,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     acc_tot += 1
                     elif l == L < r < R:
                         for j in [3, 5, 6]:
-                            # times_ABC = get_times(cut_ABC, [0, l])
-                            # omegas_ABC = [omega_tot_ABC, om['00']]
-                            # start_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
-                            # times_ABC = get_times(cut_ABC, [l+1, r, r+1, R, R+1])
-                            # omegas_ABC = [om['70'], om['70'],
-                            #               om['7%s'%j], om['7%s'%j], 
-                            #               om['77']]
-                            # end_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                             omegas = [omega_tot_ABC]+[om['00']]*L
                             p_ABC_pre = get_ABC_precomp(pr, omegas, list(range(L)))
                             start = p_ABC_pre[:,om['00']] if L==0 else p_ABC_pre
@@ -770,18 +716,11 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 tab[acc_tot] = [(jj, r, R), (ii, l, L), tab[acc_tot-1][2]]
                                 acc_tot += 1
                     elif l == L == r < R:
-                        # times_ABC = get_times(cut_ABC, [0, l])
-                        # omegas_ABC = [omega_tot_ABC, om['00']]
-                        # start_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                         omegas = [omega_tot_ABC]+[om['00']]*L
                         p_ABC_pre = get_ABC_precomp(pr, omegas, list(range(L)))
                         start = p_ABC_pre[:,om['00']] if L==0 else p_ABC_pre
                         for j in [3, 5, 6]:
                             for i in [3, 5, 6]:
-                                # times_ABC = get_times(cut_ABC, [l+1, R, R+1])
-                                # omegas_ABC = [om['7%s'%j], om['7%s'%j],
-                                #               om['77']]
-                                # end_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                                 omegas = [om['7%s'%j]]*(R-L)+[om['77']]
                                 end = get_ABC_precomp(pr, omegas, list(range(L+1, R+int(cut_ABC[R+1]!=np.inf))))
                                 omega_lst = ['00', '%s0'%i, '0%s'%j, '%s%s'%(i,j), '70', '7%s'%j]
@@ -809,10 +748,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 acc_tot += 1
                     elif l < L == r == R:
                         for i in [3, 5, 6]:
-                            # times_ABC = get_times(cut_ABC, [0, l, l+1, L])
-                            # omegas_ABC = [omega_tot_ABC, om['00'], 
-                            #           om['%s0'%i], om['%s0'%i]]
-                            # p_ABC_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                             omegas = [omega_tot_ABC]+[om['00']]*l+[om['%s0'%i]]*(L-l)
                             p_ABC = get_ABC_precomp(pr, omegas, list(range(L)))
                             for j in [3, 5, 6]:
@@ -863,12 +798,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     acc_tot += 1
                     elif l < L < r == R:
                         for i in [3, 5, 6]:
-                            # 00 -> 70 -> 7j
-                            # times_ABC = get_times(cut_ABC, [0, l, l+1, L, L+1, r])
-                            # omegas_ABC = [omega_tot_ABC, om['00'], 
-                            #               om['%s0'%i], om['%s0'%i], 
-                            #               om['70'], om['70']]
-                            # p_ABC_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                             omegas = [omega_tot_ABC]+[om['00']]*l+[om['%s0'%i]]*(L-l)+[om['70']]*(r-L)
                             p_ABC = get_ABC_precomp(pr, omegas, list(range(r)))
                             for j in [3, 5, 6]:
@@ -894,14 +823,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     acc_tot += 1
                     elif r < l == L < R:
                         for j in [3, 5, 6]:
-                            # times_ABC = get_times(cut_ABC, [0, r, r+1, l])
-                            # omegas_ABC = [omega_tot_ABC, om['00'],
-                            #               om['0%s'%j], om['0%s'%j]]
-                            # start_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
-                            # times_ABC = get_times(cut_ABC, [l+1, R, R+1])
-                            # omegas_ABC = [om['7%s'%j], om['7%s'%j], 
-                            #               om['77']]
-                            # end_0 = get_ABC_inf_bis(trans_mat_ABC, times_ABC, omegas_ABC)
                             omegas = [omega_tot_ABC]+[om['00']]*r+[om['0%s'%j]]*(l-r)
                             start = get_ABC_precomp(pr, omegas, list(range(l)))
                             omegas = [om['7%s'%j]]*(R-l)+[om['77']]
