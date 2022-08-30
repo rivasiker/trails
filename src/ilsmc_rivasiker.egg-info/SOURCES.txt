@@ -7,6 +7,7 @@ src/ilsmc/__init__.py
 src/ilsmc/combine_states.py
 src/ilsmc/cutpoints.py
 src/ilsmc/get_ABC.py
+src/ilsmc/get_emission_prob_mat.py
 src/ilsmc/get_joint_prob_mat.py
 src/ilsmc/get_ordered.py
 src/ilsmc/get_tab.py
