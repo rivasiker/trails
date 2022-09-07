@@ -1,3 +1,4 @@
+
 import numpy as np
 from scipy.integrate import dblquad
 from scipy.integrate import quad
@@ -23,7 +24,7 @@ def p_b_given_a(t, Q):
     nucleotide b given a, t and Q. a is the starting nucleotide,
     while b is the end nucleotide. t is the total time of the interval. 
     
-    P(b = bb | a == aa, Q, t)
+    P(b = bb | a == aa, Q, t)
     
     Parameters
     ----------
@@ -48,18 +49,58 @@ def p_b_given_a(t, Q):
     df['b'] = [nt[int(i)] for i in df['b']]
     return df
 
-def g_single_coal_JC69(mu, aa, bb, cc, dd, t, u):
-    prm = np.zeros(3)
-    prm[0] = 3/4 if aa==dd else -1/4
-    prm[1] = 3/4 if dd==bb else -1/4
-    prm[2] = 3/4 if dd==cc else -1/4
-    tmp = 1
-    tm = [-mu*u,-mu*u,-mu*(t-u)]
-    for i in range(3):
-        tmp = tmp*(1/4+prm[i]*np.exp(tm[i]))
-    tmp = tmp*np.exp(-u)
-    return tmp
-def p_b_c_given_a_JC69(t, mu):
+# def g_single_coal_JC69(mu, aa, bb, cc, dd, t, u):
+#     prm = np.zeros(3)
+#     prm[0] = 3/4 if aa==dd else -1/4
+#     prm[1] = 3/4 if dd==bb else -1/4
+#     prm[2] = 3/4 if dd==cc else -1/4
+#     tmp = 1
+#     tm = [-mu*u,-mu*u,-mu*(t-u)]
+#     for i in range(3):
+#         tmp = tmp*(1/4+prm[i]*np.exp(tm[i]))
+#     tmp = tmp*np.exp(-u)
+#     return tmp
+# def p_b_c_given_a_JC69(t, mu):
+#     nt = ['A', 'G', 'C', 'T']
+#     arr = np.empty((4**3, 4))
+#     acc = 0
+#     for aa in range(4):
+#         for bb in range(4):
+#             for cc in range(4):
+#                 cumsum = 0
+#                 for dd in range(4):
+#                     res, err = quad(lambda u: g_single_coal_JC69(mu, aa, bb, cc, dd, t, u), 0, t)
+#                     cumsum += res/(1-np.exp(-t))
+#                 arr[acc] = [aa,bb,cc,cumsum]
+#                 acc += 1
+#     df = pd.DataFrame(arr, columns = ['a', 'b', 'c', 'prob'])
+#     df['a'] = [nt[int(i)] for i in df['a']]
+#     df['b'] = [nt[int(i)] for i in df['b']]
+#     df['c'] = [nt[int(i)] for i in df['c']]
+#     return df
+
+def JC69_analytical_integral(aa, bb, cc, dd, t, mu):
+    alpha = 3/4 if aa==dd else -1/4
+    beta  = 3/4 if dd==bb else -1/4
+    gamma = 3/4 if dd==cc else -1/4
+    
+    res = (1 + (16*beta*gamma)/np.exp(mu*t) - 
+           (4*gamma)/(np.exp(mu*t)*(-1 + mu)) + 
+           (4*beta)/(1 + mu) + 
+           4*alpha*((1 + mu)**(-1) + 
+                    (4*gamma*(1 + 4*beta + mu))/
+                    (np.exp(mu*t)*(1 + mu)) + 
+                    (4*beta)/(1 + 2*mu)) + 
+           (-1 - (16*beta*gamma)/np.exp(mu*t) + 
+            (4*gamma)/(-1 + mu) - 
+            (4*beta)/(np.exp(mu*t)*(1 + mu)) - 
+            (4*alpha*(np.exp(mu*t)*(1 + 2*mu)*
+                      (1 + 4*gamma*(1 + mu)) + 
+                      4*beta*(1 + mu + gamma*
+                              (4 + 8*mu))))/(np.exp(2*mu*t)*
+                                             (1 + mu)*(1 + 2*mu)))/np.exp(t))/(64*(1 - np.exp(-t)))
+    return res
+def p_b_c_given_a_JC69_analytical(t, mu):
     nt = ['A', 'G', 'C', 'T']
     arr = np.empty((4**3, 4))
     acc = 0
@@ -68,8 +109,7 @@ def p_b_c_given_a_JC69(t, mu):
             for cc in range(4):
                 cumsum = 0
                 for dd in range(4):
-                    res, err = quad(lambda u: g_single_coal_JC69(mu, aa, bb, cc, dd, t, u), 0, t)
-                    cumsum += res/(1-np.exp(-t))
+                    cumsum += JC69_analytical_integral(aa, bb, cc, dd, t, mu)
                 arr[acc] = [aa,bb,cc,cumsum]
                 acc += 1
     df = pd.DataFrame(arr, columns = ['a', 'b', 'c', 'prob'])
@@ -78,20 +118,194 @@ def p_b_c_given_a_JC69(t, mu):
     df['c'] = [nt[int(i)] for i in df['c']]
     return df
 
-def g_double_coal_JC69(mu, aa, bb, cc, dd, ee, ff, t, u, v):
-    prm = np.zeros(5)
-    prm[0] = 3/4 if aa==ee else -1/4
-    prm[1] = 3/4 if ee==bb else -1/4
-    prm[2] = 3/4 if ee==ff else -1/4
-    prm[3] = 3/4 if ff==cc else -1/4
-    prm[4] = 3/4 if ff==dd else -1/4
-    tmp = 1
-    tm = [-mu*u,-mu*u,-mu*(v-u),-mu*v,-mu*(t-v)]
-    for i in range(5):
-        tmp = tmp*(1/4+prm[i]*np.exp(tm[i]))
-    tmp = tmp*3*np.exp(-3*u)*np.exp(-(v-u))
-    return tmp
-def p_b_c_d_given_a_JC69(t, mu):
+# def g_double_coal_JC69(mu, aa, bb, cc, dd, ee, ff, t, u, v):
+#     prm = np.zeros(5)
+#     prm[0] = 3/4 if aa==ee else -1/4
+#     prm[1] = 3/4 if ee==bb else -1/4
+#     prm[2] = 3/4 if ee==ff else -1/4
+#     prm[3] = 3/4 if ff==cc else -1/4
+#     prm[4] = 3/4 if ff==dd else -1/4
+#     tmp = 1
+#     tm = [-mu*u,-mu*u,-mu*(v-u),-mu*v,-mu*(t-v)]
+#     for i in range(5):
+#         tmp = tmp*(1/4+prm[i]*np.exp(tm[i]))
+#     tmp = tmp*3*np.exp(-3*u)*np.exp(-(v-u))
+#     return tmp
+# def p_b_c_d_given_a_JC69(t, mu):
+#     nt = ['A', 'G', 'C', 'T']
+#     arr = np.empty((4**4, 5))
+#     acc = 0
+#     for aa in range(4):
+#         for bb in range(4):
+#             for cc in range(4):
+#                 for dd in range(4):
+#                     cumsum = 0
+#                     for ee in range(4):
+#                         for ff in range(4):
+#                             res, err = dblquad(lambda v, u: g_double_coal_JC69(mu, aa, bb, cc, dd, ee, ff, t, u, v), 0, t, lambda u: u, t)
+#                             cumsum += res
+#                     arr[acc] = [aa,bb,cc,dd,cumsum]
+#                     acc += 1
+#     df = pd.DataFrame(arr, columns = ['a', 'b', 'c', 'd', 'prob'])
+#     df['a'] = [nt[int(i)] for i in df['a']]
+#     df['b'] = [nt[int(i)] for i in df['b']]
+#     df['c'] = [nt[int(i)] for i in df['c']]
+#     df['d'] = [nt[int(i)] for i in df['d']]
+#     df['prob'] = [i/(1+0.5*np.exp(-3*t)-1.5*np.exp(-t)) for i in df['prob']]
+#     return df
+
+
+def JC69_analytical_integral_double(aa, bb, cc, dd, ee, ff, t, mu):
+    alpha   = 3/4 if aa==ee else -1/4
+    beta    = 3/4 if ee==bb else -1/4
+    gamma   = 3/4 if ee==ff else -1/4
+    delta   = 3/4 if ff==cc else -1/4
+    epsilon = 3/4 if ff==dd else -1/4
+    
+    res = (3*((-2*delta*(-2 - 8*gamma + mu))/
+        (-6 + mu + mu**2) - 
+       (32*alpha*beta*delta*(2 + mu + 
+          8*gamma*(1 + mu)))/
+        (3*(1 + mu)**2*(2 + mu)) - 
+       (32*alpha*beta*epsilon*
+         (2 + mu + 8*gamma*(1 + mu)))/
+        (np.exp(mu*t)*(1 + mu)*(2 + mu)*
+         (3 + mu)) - (8*alpha*beta*
+         (1 + (16*delta*epsilon)/
+           np.exp(mu*t))*(2 + mu + 
+          8*gamma*(1 + mu)))/
+        ((1 + mu)*(2 + mu)*(3 + 2*mu)) + 
+       (16*delta*gamma*
+         ((-1 + 2*beta*(-2 + mu))*
+           (2 + mu) + 2*alpha*(-2 + mu)*
+           (2 + 8*beta + mu)))/
+        ((-2 + mu)*(2 + mu)*(1 + 2*mu)) - 
+       (4*(alpha + beta)*
+         (1 + 2*gamma*(2 + mu))*
+         ((3 + 2*mu)*(3*np.exp(mu*t) + 
+            4*epsilon*(3 + mu)) + 
+          12*delta*(np.exp(mu*t)*(3 + mu) + 
+            4*epsilon*(3 + 2*mu))))/
+        (3*np.exp(mu*t)*(2 + mu)*(3 + mu)*
+         (3 + 2*mu)) - 
+       (2*epsilon*((2 + 8*gamma - mu)/
+           ((-3 + mu)*(-2 + mu)) + 
+          ((1 + mu)*(2 + 8*beta + mu) + 
+            8*alpha*(1 + mu + 2*beta*
+               (2 + mu)))/((-1 + mu)*
+            (1 + mu)*(2 + mu))))/
+        np.exp(mu*t) - 
+       (-16*delta*epsilon*(2 + 8*gamma - 
+           mu)*(2 + 3*mu + mu**2) + 
+         np.exp(mu*t)*(-2 - 8*gamma + mu)*
+          (2 + 3*mu + mu**2) - 
+         3*np.exp(mu*t)*(-2 + mu)*
+          ((1 + mu)*(2 + 8*beta + mu) + 
+           8*alpha*(1 + mu + 2*beta*
+              (2 + mu))) - 48*epsilon*
+          (2*gamma*(1 + mu)*
+            ((-1 + 2*beta*(-2 + mu))*
+              (2 + mu) + 2*alpha*
+              (-2 + mu)*(2 + 8*beta + 
+               mu)) + delta*(-2 + mu)*
+            ((1 + mu)*(2 + 8*beta + mu) + 
+             8*alpha*(1 + mu + 2*beta*
+                (2 + mu)))))/
+        (6*np.exp(mu*t)*(-2 + mu)*(1 + mu)*
+         (2 + mu)) + 
+       (2*(2*np.exp(mu*t)*gamma*(1 + mu)*
+           ((-1 + 2*beta*(-2 + mu))*
+             (2 + mu) + 2*alpha*(-2 + mu)*
+             (2 + 8*beta + mu)) + 
+          delta*(32*epsilon*gamma*
+             (1 + mu)*
+             ((-1 + 2*beta*(-2 + mu))*
+               (2 + mu) + 2*alpha*
+               (-2 + mu)*(2 + 8*beta + 
+                mu)) + np.exp(mu*t)*(-2 + mu)*
+             ((1 + mu)*(2 + 8*beta + 
+                mu) + 8*alpha*(1 + mu + 
+                2*beta*(2 + mu))))))/
+        (np.exp(mu*t)*(1 + mu)**2*
+         (-4 + mu**2)) + 
+       ((32*alpha*beta*delta*(2 + mu + 
+            8*gamma*(1 + mu)))/
+          (3*(1 + mu)**2*(2 + mu)) + 
+         (32*alpha*beta*np.exp(mu*t)*epsilon*
+           (2 + mu + 8*gamma*(1 + mu)))/
+          ((1 + mu)*(2 + mu)*(3 + mu)) + 
+         (8*alpha*beta*np.exp(mu*t)*
+           (1 + (16*delta*epsilon)/
+             np.exp(mu*t))*(2 + mu + 
+            8*gamma*(1 + mu)))/
+          ((1 + mu)*(2 + mu)*
+           (3 + 2*mu)) + 
+         (4*(alpha + beta)*
+           (1 + 2*gamma*(2 + mu))*
+           ((3 + 2*mu)*(3*np.exp(2*mu*t) + 
+              4*np.exp(2*mu*t)*epsilon*
+               (3 + mu)) + 12*delta*
+             (np.exp(mu*t)*(3 + mu) + 
+              4*np.exp(mu*t)*epsilon*
+               (3 + 2*mu))))/(3*(2 + mu)*
+           (3 + mu)*(3 + 2*mu)) + 
+         np.exp(2*(1 + mu)*t)*
+          ((2*delta*(-2 - 8*gamma + mu))/
+            (np.exp(2*t)*(-6 + mu + mu**2)) - 
+           (16*delta*gamma*
+             ((-1 + 2*beta*(-2 + mu))*
+               (2 + mu) + 2*alpha*
+               (-2 + mu)*(2 + 8*beta + 
+                mu)))/(np.exp(mu*t)*(-2 + mu)*
+             (2 + mu)*(1 + 2*mu)) + 
+           2*np.exp(mu*t)*epsilon*
+            ((2 + 8*gamma - mu)/
+              (np.exp(2*t)*(-3 + mu)*
+               (-2 + mu)) + 
+             ((1 + mu)*(2 + 8*beta + 
+                mu) + 8*alpha*(1 + mu + 
+                2*beta*(2 + mu)))/
+              ((-1 + mu)*(1 + mu)*
+               (2 + mu))) + 
+           (-16*delta*epsilon*
+              (2 + 8*gamma - mu)*
+              (2 + 3*mu + mu**2) + 
+             np.exp(mu*t)*(-2 - 8*gamma + mu)*
+              (2 + 3*mu + mu**2) - 
+             3*np.exp(2*t + mu*t)*(-2 + mu)*
+              ((1 + mu)*(2 + 8*beta + 
+                mu) + 8*alpha*(1 + mu + 
+                2*beta*(2 + mu))) - 
+             48*np.exp(2*t)*epsilon*
+              (2*gamma*(1 + mu)*
+                ((-1 + 2*beta*(-2 + mu))*
+                (2 + mu) + 2*alpha*
+                (-2 + mu)*(2 + 8*beta + 
+                mu)) + delta*(-2 + mu)*
+                ((1 + mu)*(2 + 8*beta + 
+                mu) + 8*alpha*(1 + mu + 2*
+                beta*(2 + mu)))))/
+            (6*np.exp(2*t)*(-2 + mu)*(1 + mu)*
+             (2 + mu)) - 
+           (2*(2*np.exp(mu*t)*gamma*(1 + mu)*
+               ((-1 + 2*beta*(-2 + mu))*
+                (2 + mu) + 2*alpha*
+                (-2 + mu)*(2 + 8*beta + 
+                mu)) + delta*
+               (32*epsilon*gamma*(1 + mu)*
+                ((-1 + 2*beta*(-2 + mu))*(
+                2 + mu) + 2*alpha*(-2 + 
+                mu)*(2 + 8*beta + mu)) + 
+                np.exp(mu*t)*(-2 + mu)*
+                ((1 + mu)*(2 + 8*beta + 
+                mu) + 8*alpha*(1 + mu + 
+                2*beta*(2 + mu))))))/
+            (np.exp(mu*t)*(1 + mu)**2*
+             (-4 + mu**2))))/
+        np.exp(3*(1 + mu)*t)))/(1024*(1 + 0.5/np.exp(3*t) - 1.5/np.exp(t)))
+    return res
+
+def p_b_c_d_given_a_JC69_analytical(t, mu):
     nt = ['A', 'G', 'C', 'T']
     arr = np.empty((4**4, 5))
     acc = 0
@@ -102,7 +316,7 @@ def p_b_c_d_given_a_JC69(t, mu):
                     cumsum = 0
                     for ee in range(4):
                         for ff in range(4):
-                            res, err = dblquad(lambda v, u: g_double_coal_JC69(mu, aa, bb, cc, dd, ee, ff, t, u, v), 0, t, lambda u: u, t)
+                            res = JC69_analytical_integral_double(aa, bb, cc, dd, ee, ff, t, mu)
                             cumsum += res
                     arr[acc] = [aa,bb,cc,dd,cumsum]
                     acc += 1
@@ -111,7 +325,6 @@ def p_b_c_d_given_a_JC69(t, mu):
     df['b'] = [nt[int(i)] for i in df['b']]
     df['c'] = [nt[int(i)] for i in df['c']]
     df['d'] = [nt[int(i)] for i in df['d']]
-    df['prob'] = [i/(1+0.5*np.exp(-3*t)-1.5*np.exp(-t)) for i in df['prob']]
     return df
 
 
@@ -121,7 +334,7 @@ def b_c_d_given_a_to_dict_a_b_c_d(df):
     by p_b_c_given_a_single_coal or p_b_c_given_a_double_coal
     into a dictionary. How to use the dictionary:
     
-        P(b, c, d | a) = dct[a][b][c][d]
+        P(b, c, d | a) = dct[a][b][c][d]
     
     Parameters
     ----------
@@ -143,7 +356,7 @@ def b_c_given_a_to_dict_a_b_c(df):
     by p_b_c_given_a_single_coal or p_b_c_given_a_double_coal
     into a dictionary. How to use the dictionary:
     
-        P(b, c | a) = dct[a][b][c]
+        P(b, c | a) = dct[a][b][c]
     
     Parameters
     ----------
@@ -162,7 +375,7 @@ def b_given_a_to_dict_a_b(df):
     This function converts the data frame as outputted
     by p_b_given_a into a dictionary. How to use the dictionary:
     
-        P(b | a) = dct[a][b]
+        P(b | a) = dct[a][b]
     
     Parameters
     ----------
@@ -209,12 +422,12 @@ def calc_emissions_single_JC69(
     # df_ab[ab0][ab1]
     
     # First coalescent
-    df_first = p_b_c_given_a_JC69(t = a1b1_ab0_t, mu = a1b1_ab0_mu)
+    df_first = p_b_c_given_a_JC69_analytical(t = a1b1_ab0_t, mu = a1b1_ab0_mu)
     df_first = b_c_given_a_to_dict_a_b_c(df_first)
     # df_first[a1][b1][ab0]
     
     # Second coalescent
-    df_second = p_b_c_given_a_JC69(t = ab1c1_abc0_t, mu = ab1c1_abc0_mu)
+    df_second = p_b_c_given_a_JC69_analytical(t = ab1c1_abc0_t, mu = ab1c1_abc0_mu)
     df_second = b_c_given_a_to_dict_a_b_c(df_second)
     # df_second[a1][b1][ab0]
     
@@ -273,7 +486,7 @@ def calc_emissions_double_JC69(
     # df_d[abc0][d0]
     
     # Double coalescent
-    df_double = p_b_c_d_given_a_JC69(t = a1b1c1_abc0_t, mu = a1b1c1_abc0_mu)
+    df_double = p_b_c_d_given_a_JC69_analytical(t = a1b1c1_abc0_t, mu = a1b1c1_abc0_mu)
     df_double = b_c_d_given_a_to_dict_a_b_c_d(df_double)
     # df_double[a1][b1][c1][abc0]
     
