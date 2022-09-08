@@ -49,37 +49,32 @@ def p_b_given_a(t, Q):
     df['b'] = [nt[int(i)] for i in df['b']]
     return df
 
-# def g_single_coal_JC69(mu, aa, bb, cc, dd, t, u):
-#     prm = np.zeros(3)
-#     prm[0] = 3/4 if aa==dd else -1/4
-#     prm[1] = 3/4 if dd==bb else -1/4
-#     prm[2] = 3/4 if dd==cc else -1/4
-#     tmp = 1
-#     tm = [-mu*u,-mu*u,-mu*(t-u)]
-#     for i in range(3):
-#         tmp = tmp*(1/4+prm[i]*np.exp(tm[i]))
-#     tmp = tmp*np.exp(-u)
-#     return tmp
-# def p_b_c_given_a_JC69(t, mu):
-#     nt = ['A', 'G', 'C', 'T']
-#     arr = np.empty((4**3, 4))
-#     acc = 0
-#     for aa in range(4):
-#         for bb in range(4):
-#             for cc in range(4):
-#                 cumsum = 0
-#                 for dd in range(4):
-#                     res, err = quad(lambda u: g_single_coal_JC69(mu, aa, bb, cc, dd, t, u), 0, t)
-#                     cumsum += res/(1-np.exp(-t))
-#                 arr[acc] = [aa,bb,cc,cumsum]
-#                 acc += 1
-#     df = pd.DataFrame(arr, columns = ['a', 'b', 'c', 'prob'])
-#     df['a'] = [nt[int(i)] for i in df['a']]
-#     df['b'] = [nt[int(i)] for i in df['b']]
-#     df['c'] = [nt[int(i)] for i in df['c']]
-#     return df
-
 def JC69_analytical_integral(aa, bb, cc, dd, t, mu):
+    """
+    This function calculates the probability of observing the 
+    nucleotides bb, cc and dd given aa, t and mu. aa and bb are the starting 
+    nucleotides, while cc is the end nucleotide. dd is the nucleotide at 
+    the time of coalescent. t is the total time of the interval. The 
+    returned value corresponds to integrating the coalescent to d over
+    the entirety of t. 
+    
+    P(b = bb, c == cc, d == dd | a == aa, mu, t)
+    
+          c     ^
+          |     |
+        __d__   | t
+       |     |  |
+       a     b  |
+    
+    Parameters
+    ----------
+    aa, bb, cc, dd : integer or string
+        nucleotide at a, b, c and d respectively
+    t : numeric
+        Total time of the interval (from a/b/c to d)
+    mu : numeric
+        The mutation rate for the JC69 model
+    """
     alpha = 3/4 if aa==dd else -1/4
     beta  = 3/4 if dd==bb else -1/4
     gamma = 3/4 if dd==cc else -1/4
@@ -101,6 +96,17 @@ def JC69_analytical_integral(aa, bb, cc, dd, t, mu):
                                              (1 + mu)*(1 + 2*mu)))/np.exp(t))/(64*(1 - np.exp(-t)))
     return res
 def p_b_c_given_a_JC69_analytical(t, mu):
+    """
+    This function returns a data frame with the values of
+    P(b, c | a) for all combinations of nucleotides. 
+    
+    Parameters
+    ----------
+    t : numeric
+        Total time of the interval (from a/b/c to d)
+    mu : numeric
+        The mutation rate for the JC69 model
+    """
     nt = ['A', 'G', 'C', 'T']
     arr = np.empty((4**3, 4))
     acc = 0
@@ -118,44 +124,37 @@ def p_b_c_given_a_JC69_analytical(t, mu):
     df['c'] = [nt[int(i)] for i in df['c']]
     return df
 
-# def g_double_coal_JC69(mu, aa, bb, cc, dd, ee, ff, t, u, v):
-#     prm = np.zeros(5)
-#     prm[0] = 3/4 if aa==ee else -1/4
-#     prm[1] = 3/4 if ee==bb else -1/4
-#     prm[2] = 3/4 if ee==ff else -1/4
-#     prm[3] = 3/4 if ff==cc else -1/4
-#     prm[4] = 3/4 if ff==dd else -1/4
-#     tmp = 1
-#     tm = [-mu*u,-mu*u,-mu*(v-u),-mu*v,-mu*(t-v)]
-#     for i in range(5):
-#         tmp = tmp*(1/4+prm[i]*np.exp(tm[i]))
-#     tmp = tmp*3*np.exp(-3*u)*np.exp(-(v-u))
-#     return tmp
-# def p_b_c_d_given_a_JC69(t, mu):
-#     nt = ['A', 'G', 'C', 'T']
-#     arr = np.empty((4**4, 5))
-#     acc = 0
-#     for aa in range(4):
-#         for bb in range(4):
-#             for cc in range(4):
-#                 for dd in range(4):
-#                     cumsum = 0
-#                     for ee in range(4):
-#                         for ff in range(4):
-#                             res, err = dblquad(lambda v, u: g_double_coal_JC69(mu, aa, bb, cc, dd, ee, ff, t, u, v), 0, t, lambda u: u, t)
-#                             cumsum += res
-#                     arr[acc] = [aa,bb,cc,dd,cumsum]
-#                     acc += 1
-#     df = pd.DataFrame(arr, columns = ['a', 'b', 'c', 'd', 'prob'])
-#     df['a'] = [nt[int(i)] for i in df['a']]
-#     df['b'] = [nt[int(i)] for i in df['b']]
-#     df['c'] = [nt[int(i)] for i in df['c']]
-#     df['d'] = [nt[int(i)] for i in df['d']]
-#     df['prob'] = [i/(1+0.5*np.exp(-3*t)-1.5*np.exp(-t)) for i in df['prob']]
-#     return df
-
 
 def JC69_analytical_integral_double(aa, bb, cc, dd, ee, ff, t, mu):
+    """
+    This function calculates the probability of observing the 
+    nucleotides bb, cc, dd, ee and ff given aa, t and mu. aa, bb 
+    and cc are the starting nucleotides, while dd is the end nucleotide. 
+    ee is the nucleotide at the time of the first coalescent, while
+    ff is the nucleotide at the time of the second coalescent. t is the 
+    total time of the interval. The returned value corresponds to integrating 
+    the coalescent to e and f over the entirety of t. 
+    
+    P(b = bb, c == cc, d == dd, e == ee, f == ff | a == aa, Q, t)
+    
+              d       ^
+              |       |
+           ___f___    |
+          |       |   | t
+        __e__     |   |
+       |     |    |   |
+       a     b    c   |
+    
+    Parameters
+    ----------
+    aa, bb, cc, dd, ee, ff : integer or string
+        nucleotide at a, b, c, d, e and f, respectively
+    t : numeric
+        Total time of the interval (from a/b/c to d)
+    mu : numeric
+        The mutation rate for the JC69 model
+    """
+    
     alpha   = 3/4 if aa==ee else -1/4
     beta    = 3/4 if ee==bb else -1/4
     gamma   = 3/4 if ee==ff else -1/4
@@ -306,6 +305,17 @@ def JC69_analytical_integral_double(aa, bb, cc, dd, ee, ff, t, mu):
     return res
 
 def p_b_c_d_given_a_JC69_analytical(t, mu):
+    """
+    This function returns a data frame with the values of
+    P(b, c, d | a) for all combinations of nucleotides. 
+    
+    Parameters
+    ----------
+    t : numeric
+        Total time of the interval (from a/b/c to d)
+    mu : numeric
+        The mutation rate for the JC69 model
+    """
     nt = ['A', 'G', 'C', 'T']
     arr = np.empty((4**4, 5))
     acc = 0
@@ -390,6 +400,41 @@ def calc_emissions_single_JC69(
     a0_a1_mu_vec, b0_b1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
     ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec
 ):
+    """
+    This function returns the emission probabilities of a hidden
+    state contining two coalescent events at different time intervals.
+        
+                    _________
+                   |         |
+         ---------abc0-----  |
+               ____|___      |
+              |        |     |
+         ----ab1-------c1--  |
+              |        |     |
+         ----ab0-----  |     |
+            __|__      |     |
+           |     |     |     |
+         --a1----b1--  |     |
+           |     |     |     |
+           a0    b0    c0    d0
+        
+    Parameters
+    ----------
+    a0_a1_t_vec, b0_b1_t_vec, c0_c1_t_vec, 
+    d0_abc0_t_vec, ab0_ab1_t_vec : numeric list
+        Each list contains the interval time for a site to mutate
+        with a certain mutation rate, specified by *mu_vec
+    a1b1_ab0_t, ab1c1_abc0_t : numeric
+        Time interval when the first and the second coalescent
+        can happen, respectively.
+    a0_a1_mu_vec, b0_b1_mu_vec, c0_c1_mu_vec, 
+    d0_abc0_mu_vec, ab0_ab1_mu_vec : numeric list
+        Each list contains the mutation rates for each interval 
+        defined in *t_vec
+    a1b1_ab0_mu, ab1c1_abc0_mu : numeric
+        Mutation rates for the first and second coalescent intervals, 
+        respectively.
+    """
   
     # a0 to a1
     Q_vec = [rate_mat_JC69(i) for i in a0_a1_mu_vec]
@@ -461,6 +506,34 @@ def calc_emissions_double_JC69(
     a0_a1_t_vec, b0_b1_t_vec, c0_c1_t_vec, a1b1c1_abc0_t, d0_abc0_t_vec,
     a0_a1_mu_vec, b0_b1_mu_vec, c0_c1_mu_vec, a1b1c1_abc0_mu, d0_abc0_mu_vec
 ):
+    """
+    This function returns the emission probabilities of a hidden
+    state contining two coalescent events at the same time interval.
+        
+                    _________
+                   |         |
+         ---------abc0-----  |
+               ____|___      |
+            __|__      |     |
+           |     |     |     |
+         --a1----b1----c1--  |
+           |     |     |     |
+           a0    b0    c0    d0
+        
+    Parameters
+    ----------
+    a0_a1_t_vec, b0_b1_t_vec, c0_c1_t_vec, d0_abc0_t_vec : numeric list
+        Each list contains the interval time for a site to mutate
+        with a certain mutation rate, specified by *mu_vec
+    a1b1c1_abc0_t : numeric
+        Time interval for the coalescent events to happen.
+    a0_a1_mu_vec, b0_b1_mu_vec, c0_c1_mu_vec, d0_abc0_mu_vec : numeric list
+        Each list contains the mutation rates for each interval 
+        defined in *t_vec
+    a1b1c1_abc0_mu : numeric
+        Mutation rates for the interval where coalescents happen.
+    """
+    
     # a0 to a1
     Q_vec = [rate_mat_JC69(i) for i in a0_a1_mu_vec]
     df_a = p_b_given_a(t = a0_a1_t_vec, Q = Q_vec)
@@ -510,12 +583,49 @@ def calc_emissions_double_JC69(
                     emissions[a0+b0+c0+d0] = acc/4
     return emissions
 
+
+
+
 def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
                           rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
                           coal_A, coal_B, coal_AB, coal_C, coal_ABC,
                           n_int_AB, n_int_ABC,
                           mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC):
-    
+    """
+    This function returns the emission probabilities of all hidden states
+    given a set of population genetics parameters. 
+        
+            |          |
+            |  ABC  |\ \
+            | AB |\ \ \ \
+            / /\ \ \ \ \ \
+           / /  \ \ \ \ \ \
+           A      B   C   D
+        
+    Parameters
+    ----------
+    t_A, t_B : numeric
+        Time between present time and the first speciation time for
+        species A and B, respectively. They show be equal. 
+    t_AB : numeric
+        Time between speciation events.
+    t_C : numeric
+        Time between present time and the second speciation time for 
+        species C. It should be t_A (or t_B) + t_AB.
+    t_upper : numeric
+        Time between the last ABC interval and the third speciation time.
+    t_peak : numeric
+        Mean divergence time between ABC and D after the third speciation time.
+        It should be 4*coal_ABC (or it can be estimated instead). 
+    rho_A, rho_B, rho_AB, rho_C, rho_ABC : numeric
+        Recombination rates for the A, B, AB, C and ABC intervals.
+    coal_A, coal_B, coal_AB, coal_C, coal_ABC : numeric
+        Coalescent rates for the A, B, AB, C and ABC intervals.
+    n_int_AB, n_int_ABC : integer
+        Number of intervals in the AB and ABC parts of the tree. 
+    mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC : numeric
+        Mutation rate for the A, B, C, D, AB and ABC intervals.
+    """
     n_markov_states = n_int_AB*n_int_ABC+n_int_ABC*3+3*comb(n_int_ABC, 2, exact = True)
     cut_AB = cutpoints_AB(n_int_AB, t_AB, coal_AB)
     cut_ABC = cutpoints_ABC(n_int_ABC, coal_ABC)
@@ -542,7 +652,8 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
             add = t_upper+cut_ABC[n_int_ABC-1]-cut_ABC[j+1] if j!=(n_int_ABC-1) else 0
             d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
             d0_abc0_mu_vec = [mu_D, mu_ABC]
-                        
+            
+            # V1 states
             emissions = calc_emissions_single_JC69(
                 a0_a1_t_vec, b0_b1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, c0_c1_t_vec, d0_abc0_t_vec,
@@ -553,6 +664,7 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
             probs[acc] = emissions
             acc += 1
             
+            # V2 states
             emissions = calc_emissions_single_JC69(
                 a0_a1_t_vec, c0_c1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, b0_b1_t_vec, d0_abc0_t_vec,
@@ -566,6 +678,7 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
             probs[acc] = new_emissions
             acc += 1
             
+            # V3 states
             emissions = calc_emissions_single_JC69(
                 b0_b1_t_vec, c0_c1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, a0_a1_t_vec, d0_abc0_t_vec,
@@ -594,7 +707,7 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
         d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
         d0_abc0_mu_vec = [mu_D, mu_ABC]
         
-        # V1
+        # V1 states
         emissions = calc_emissions_double_JC69(
             a0_a1_t_vec, b0_b1_t_vec, c0_c1_t_vec, a1b1c1_abc0_t, d0_abc0_t_vec,
             a0_a1_mu_vec, b0_b1_mu_vec, c0_c1_mu_vec, a1b1c1_abc0_mu, d0_abc0_mu_vec
@@ -604,7 +717,7 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
         probs[acc] = emissions
         acc += 1
         
-        # V2
+        # V2 states
         emissions = calc_emissions_double_JC69(
             a0_a1_t_vec, c0_c1_t_vec, b0_b1_t_vec, a1b1c1_abc0_t, d0_abc0_t_vec,
             a0_a1_mu_vec, c0_c1_mu_vec, b0_b1_mu_vec, a1b1c1_abc0_mu, d0_abc0_mu_vec
@@ -617,7 +730,7 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
         probs[acc] = new_emissions
         acc += 1
         
-        # V3
+        # V3 states
         emissions = calc_emissions_double_JC69(
             b0_b1_t_vec, c0_c1_t_vec, a0_a1_t_vec, a1b1c1_abc0_t, d0_abc0_t_vec,
             b0_b1_mu_vec, c0_c1_mu_vec, a0_a1_mu_vec, a1b1c1_abc0_mu, d0_abc0_mu_vec
