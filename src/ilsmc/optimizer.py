@@ -3,6 +3,7 @@ import pandas as pd
 from ilsmc.get_emission_prob_mat import get_emission_prob_mat
 from ilsmc.get_joint_prob_mat import get_joint_prob_mat
 from scipy.optimize import minimize, shgo
+from csv import writer
 
 def forward_loglik(a, b, pi, V):
     alpha = np.zeros((V.shape[0], a.shape[0]))
@@ -12,6 +13,11 @@ def forward_loglik(a, b, pi, V):
         for j in range(a.shape[0]):
             alpha[t, j] = np.log(np.exp(alpha[t - 1]-x).dot(a[:, j]) * b[j, V[t]])+x
     return np.log(np.exp(alpha[len(V)-1]-x).sum())+x
+
+def append_list_as_row(file_name, list_of_elem):
+    with open(file_name, 'a+', newline='') as write_obj:
+        csv_writer = writer(write_obj)
+        csv_writer.writerow(list_of_elem)
 
 def trans_emiss_calc(t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC):
     N_ref = N_AB
@@ -72,6 +78,7 @@ def optimization_wrapper(arg_lst, n_int_AB, n_int_ABC, V, info):
         t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
     )
     loglik = forward_loglik(a, b, pi, V)
+    append_list_as_row('result.csv', [info['Nfeval']]+arg_lst+[loglik])
     print(
         '{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}   {5: 3.6f}   {6: 3.6f}   {7: 3.6f}   {8: 3.6f}   {9: 3.6f}   {10: 3.6f}   {11: 3.6f}   {12: 3.6f}'.format(
             info['Nfeval'], 
