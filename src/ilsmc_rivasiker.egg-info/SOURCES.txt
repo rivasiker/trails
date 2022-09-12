@@ -13,6 +13,7 @@ src/ilsmc/get_ordered.py
 src/ilsmc/get_tab.py
 src/ilsmc/get_times.py
 src/ilsmc/load_trans_mat.py
+src/ilsmc/optimizer.py
 src/ilsmc/vanloan.py
 src/ilsmc/data/trans_mat_full_1.csv
 src/ilsmc/data/trans_mat_full_2.csv
