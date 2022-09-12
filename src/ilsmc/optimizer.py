@@ -2,17 +2,18 @@ import numpy as np
 import pandas as pd
 from ilsmc.get_emission_prob_mat import get_emission_prob_mat
 from ilsmc.get_joint_prob_mat import get_joint_prob_mat
+from scipy.optimize import minimize, shgo
 
-def forward_loglik(V, a, b, pi):
+def forward_loglik(a, b, pi, V):
     alpha = np.zeros((V.shape[0], a.shape[0]))
     alpha[0, :] = np.log(pi * b[:, V[0]])
     for t in range(1, V.shape[0]):
-        x = max(alpha[t-1, :])
+        x = alpha[t-1, :].max()
         for j in range(a.shape[0]):
             alpha[t, j] = np.log(np.exp(alpha[t - 1]-x).dot(a[:, j]) * b[j, V[t]])+x
     return np.log(np.exp(alpha[len(V)-1]-x).sum())+x
 
-def optimization_wrapper(t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC):
+def trans_emiss_calc(t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC):
     N_ref = N_AB
     t_A = t_1
     t_B = t_1
@@ -45,7 +46,7 @@ def optimization_wrapper(t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, 
     tr.columns = tr.columns.droplevel()
     hidden_names = list(tr.columns)
     hidden_names = dict(zip(hidden_names, range(len(hidden_names))))
-    arr = np.array(tr)
+    arr = np.array(tr).astype(np.float64)
     pi = arr.sum(axis=1)
     a = arr/pi[:,None]
     
@@ -64,3 +65,41 @@ def optimization_wrapper(t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, 
     b = np.array(em)
     
     return a, b, pi, hidden_names, observed_names
+
+def optimization_wrapper(arg_lst, n_int_AB, n_int_ABC, V, info):
+    t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu = arg_lst
+    a, b, pi, hidden_names, observed_names = trans_emiss_calc(
+        t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
+    )
+    loglik = forward_loglik(a, b, pi, V)
+    print(
+        '{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}   {5: 3.6f}   {6: 3.6f}   {7: 3.6f}   {8: 3.6f}   {9: 3.6f}   {10: 3.6f}   {11: 3.6f}   {12: 3.6f}'.format(
+            info['Nfeval'], 
+            arg_lst[0], arg_lst[1], arg_lst[2], arg_lst[3], arg_lst[4], 
+            arg_lst[5], arg_lst[6], arg_lst[7], arg_lst[8], arg_lst[9], arg_lst[10],
+            loglik
+        )
+    )
+    info['Nfeval'] += 1
+    return -loglik
+
+def optimizer(t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, V):
+    init_params = np.array([t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu])
+    b_t = (0.01, 10)
+    b_N = (1, 500000)
+    b_r = (0.000000001, 0.00001)
+    b_mu = (0.0001, 0.1)
+    bnds = (b_t, b_t, b_t, b_N, b_N, b_N, b_N, b_N, b_N, b_r, b_mu)
+    res = minimize(
+        optimization_wrapper, 
+        x0 = init_params,
+        args = (n_int_AB, n_int_ABC, V, {'Nfeval':0}),
+        method = 'Nelder-Mead',
+        bounds = bnds, 
+        options = {
+            'maxiter' : 100,
+            'disp': True
+        }
+    )
+    
+    return res
