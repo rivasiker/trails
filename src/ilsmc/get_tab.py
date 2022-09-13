@@ -654,11 +654,13 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     except KeyError:
                                         ncpus = mp.cpu_count()
                                     pool = mp.Pool(ncpus)
+                                    iterable = [(trans_mat_ABC, tup, om['00'], om['77'],cut_ABC[r+1]-cut_ABC[r]) for tup in iter_lst]
+                                    chunksize = 7
                                     res_iter = []
                                     res_iter = pool.starmap_async(
                                         vanloan_3, 
-                                        [(trans_mat_ABC, tup, om['00'], om['77'],
-                                          cut_ABC[r+1]-cut_ABC[r]) for tup in iter_lst]
+                                        iterable,
+                                        chunksize = chunksize
                                     ).get()
                                     pool.close()
                                     res_tot += (pi@start@sum(res_iter)).sum()
