@@ -7,7 +7,6 @@ from ilsmc.get_ABC import get_ABC, get_ABC_inf_bis
 from ilsmc.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
 from ilsmc.get_times import get_times
 from ilsmc.get_ordered import get_ordered
-import time
 
 def precomp(trans_mat, times):
     """
@@ -470,7 +469,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
         for L in range(l, n_int_ABC):
             for r in range(n_int_ABC):
                 for R in range(r, n_int_ABC):
-                    startim = time.time()
                     if l < L < r < R:
                         times_ABC = get_times(cut_ABC, [0, l, l+1, L, L+1, r, r+1, R, R+1])
                         for i in [3, 5, 6]:
@@ -861,6 +859,4 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 acc_tot += 1
                     else:
                         continue
-                    endtim = time.time()
-                    print((l, L), (r, R), endtim - startim)
     return tab
