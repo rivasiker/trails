@@ -653,7 +653,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     except KeyError:
                                         ncpus = mp.cpu_count()
                                     print('Starting...')
-                                    start = time.time()
+                                    startim = time.time()
                                     pool = mp.Pool(ncpus)
                                     res_iter = []
                                     res_iter = pool.starmap_async(
@@ -662,7 +662,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                           cut_ABC[r+1]-cut_ABC[r]) for tup in iter_lst]
                                     ).get()
                                     pool.close()
-                                    end = time.time()
+                                    endtim = time.time()
                                     res_tot += (pi@start@sum(res_iter)).sum()
                                     res_test = vanloan_2(
                                         trans_mat_ABC, 
@@ -675,7 +675,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     jj = dct_num[j]
                                     tab[acc_tot] = [(ii, l, L), (jj, r, R), res_tot]
                                     acc_tot += 1
-                                    print((ii, l, L), (jj, r, R), end - start)
+                                    print((ii, l, L), (jj, r, R), endtim - startim)
                                     print('Ended!')
                     elif l == L < r == R:
                         omegas = [omega_tot_ABC]+[om['00']]*L
