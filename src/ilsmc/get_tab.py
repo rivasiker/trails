@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.linalg import expm
 import multiprocess as mp
+import os
 from scipy.special import comb
 from ilsmc.get_ABC import get_ABC, get_ABC_inf_bis
 from ilsmc.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
@@ -408,7 +409,11 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                             om['%s'%(omega_lst[y],)],
                                             om['%s'%(omega_lst[z],)])
                                     iter_lst.append(tup)
-                            pool = mp.Pool(mp.cpu_count())
+                            try:
+                                ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+                            except KeyError:
+                                ncpus = mp.cpu_count()
+                            pool = mp.Pool(ncpus)
                             res_tot = []
                             res_tot = pool.starmap_async(
                                 vanloan_2, 
@@ -642,7 +647,11 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                                        om['%s'%(z,)],
                                                        om['%s'%(v,)])
                                                 iter_lst.append(tup)
-                                    pool = mp.Pool(mp.cpu_count())
+                                    try:
+                                        ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+                                    except KeyError:
+                                        ncpus = mp.cpu_count()
+                                    pool = mp.Pool(ncpus)
                                     res_iter = []
                                     res_iter = pool.starmap_async(
                                         vanloan_3, 
@@ -731,7 +740,11 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                                om['%s'%(omega_lst[y],)],
                                                om['%s'%(omega_lst[z],)])
                                         iter_lst.append(tup)
-                                pool = mp.Pool(mp.cpu_count())
+                                try:
+                                    ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+                                except KeyError:
+                                    ncpus = mp.cpu_count()
+                                pool = mp.Pool(ncpus)
                                 res_tot = []
                                 res_tot = pool.starmap_async(
                                     vanloan_2, 
@@ -781,7 +794,11 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                                    om['%s'%(omega_lst[y],)],
                                                    om['%s'%(omega_lst[z],)])
                                             iter_lst.append(tup)
-                                    pool = mp.Pool(mp.cpu_count())
+                                    try:
+                                        ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+                                    except KeyError:
+                                        ncpus = mp.cpu_count()
+                                    pool = mp.Pool(ncpus)
                                     res_tot = []
                                     res_tot = pool.starmap_async(
                                         vanloan_2, 
