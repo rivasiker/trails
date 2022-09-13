@@ -469,7 +469,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
     for l in range(n_int_ABC):
         for L in range(l, n_int_ABC):
             for r in range(n_int_ABC):
-                for R in range(r, n_int_ABC): 
+                for R in range(r, n_int_ABC):
+                    startim = time.time()
                     if l < L < r < R:
                         times_ABC = get_times(cut_ABC, [0, l, l+1, L, L+1, r, r+1, R, R+1])
                         for i in [3, 5, 6]:
@@ -652,8 +653,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                         ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
                                     except KeyError:
                                         ncpus = mp.cpu_count()
-                                    print('Starting...')
-                                    startim = time.time()
                                     pool = mp.Pool(ncpus)
                                     res_iter = []
                                     res_iter = pool.starmap_async(
@@ -662,7 +661,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                           cut_ABC[r+1]-cut_ABC[r]) for tup in iter_lst]
                                     ).get()
                                     pool.close()
-                                    endtim = time.time()
                                     res_tot += (pi@start@sum(res_iter)).sum()
                                     res_test = vanloan_2(
                                         trans_mat_ABC, 
@@ -675,8 +673,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     jj = dct_num[j]
                                     tab[acc_tot] = [(ii, l, L), (jj, r, R), res_tot]
                                     acc_tot += 1
-                                    print((ii, l, L), (jj, r, R), endtim - startim)
-                                    print('Ended!')
                     elif l == L < r == R:
                         omegas = [omega_tot_ABC]+[om['00']]*L
                         p_ABC_pre = get_ABC_precomp(pr, omegas, list(range(L)))
@@ -865,4 +861,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 acc_tot += 1
                     else:
                         continue
+                    endtim = time.time()
+                    print((l, L), (r, R), endtim - startim)
     return tab
