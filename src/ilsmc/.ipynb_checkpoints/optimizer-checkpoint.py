@@ -14,11 +14,11 @@ def forward_loglik(a, b, pi, V):
             alpha[t, j] = np.log(np.exp(alpha[t - 1]-x).dot(a[:, j]) * b[j, V[t]])+x
     return np.log(np.exp(alpha[len(V)-1]-x).sum())+x
 
-def append_list_as_row(file_name, list_of_elem):
-    with open('results.csv', 'a') as write_obj:
-        for i in range(len(list_of_elem)):
-            file_object.write(str(list_of_elem[i]))
-            if i != (len(list_of_elem)-1)
+def write_list(lst):
+    with open('results.csv', 'a') as f:
+        for i in range(len(lst)):
+            f.write(str(lst[i]))
+            if i != (len(lst)-1):
                 file_object.write(',')
         file_object.write('\n')
 
@@ -81,7 +81,7 @@ def optimization_wrapper(arg_lst, n_int_AB, n_int_ABC, V, info):
         t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
     )
     loglik = forward_loglik(a, b, pi, V)
-    append_list_as_row('result.csv', [info['Nfeval']]+arg_lst+[loglik])
+    write_list([info['Nfeval']]+arg_lst+[loglik])
     print(
         '{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}   {5: 3.6f}   {6: 3.6f}   {7: 3.6f}   {8: 3.6f}   {9: 3.6f}   {10: 3.6f}   {11: 3.6f}   {12: 3.6f}'.format(
             info['Nfeval'], 

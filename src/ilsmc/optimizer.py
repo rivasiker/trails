@@ -18,7 +18,7 @@ def write_list(lst):
     with open('results.csv', 'a') as f:
         for i in range(len(lst)):
             f.write(str(lst[i]))
-            if i != (len(lst)-1)
+            if i != (len(lst)-1):
                 file_object.write(',')
         file_object.write('\n')
 
