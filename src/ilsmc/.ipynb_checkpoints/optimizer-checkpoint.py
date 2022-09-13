@@ -15,9 +15,12 @@ def forward_loglik(a, b, pi, V):
     return np.log(np.exp(alpha[len(V)-1]-x).sum())+x
 
 def append_list_as_row(file_name, list_of_elem):
-    with open(file_name, 'a+', newline='') as write_obj:
-        csv_writer = writer(write_obj)
-        csv_writer.writerow(list_of_elem)
+    with open('results.csv', 'a') as write_obj:
+        for i in range(len(list_of_elem)):
+            file_object.write(str(list_of_elem[i]))
+            if i != (len(list_of_elem)-1)
+                file_object.write(',')
+        file_object.write('\n')
 
 def trans_emiss_calc(t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC):
     N_ref = N_AB
