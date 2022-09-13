@@ -19,8 +19,8 @@ def write_list(lst):
         for i in range(len(lst)):
             f.write(str(lst[i]))
             if i != (len(lst)-1):
-                file_object.write(',')
-        file_object.write('\n')
+                f.write(',')
+        f.write('\n')
 
 def trans_emiss_calc(t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC):
     N_ref = N_AB
@@ -81,7 +81,7 @@ def optimization_wrapper(arg_lst, n_int_AB, n_int_ABC, V, info):
         t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
     )
     loglik = forward_loglik(a, b, pi, V)
-    write_list([info['Nfeval']]+arg_lst+[loglik])
+    write_list([info['Nfeval'], t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, loglik])
     print(
         '{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}   {5: 3.6f}   {6: 3.6f}   {7: 3.6f}   {8: 3.6f}   {9: 3.6f}   {10: 3.6f}   {11: 3.6f}   {12: 3.6f}'.format(
             info['Nfeval'], 
