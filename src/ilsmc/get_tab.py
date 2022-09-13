@@ -7,6 +7,7 @@ from ilsmc.get_ABC import get_ABC, get_ABC_inf_bis
 from ilsmc.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
 from ilsmc.get_times import get_times
 from ilsmc.get_ordered import get_ordered
+import time
 
 def precomp(trans_mat, times):
     """
@@ -413,6 +414,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
                             except KeyError:
                                 ncpus = mp.cpu_count()
+                            print('Starting...')
+                            start = time.time()
                             pool = mp.Pool(ncpus)
                             res_tot = []
                             res_tot = pool.starmap_async(
@@ -421,6 +424,9 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     om['77'], cut_ABC[r+1]-cut_ABC[r]) for tup in iter_lst]
                             ).get()
                             pool.close()
+                            end = time.time()
+                            print((0, l, L), (ii, r, R), end - start)
+                            print('Ended!')
                             for l in range(n_int_AB):
                                 cond = [i == ((0, l), 'D') for i in names_tab_AB]
                                 pi = pi_ABC[cond]
