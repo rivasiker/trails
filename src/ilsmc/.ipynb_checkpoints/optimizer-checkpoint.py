@@ -107,7 +107,6 @@ def optimizer(t_1, t_2, t_upper, N_A, N_B, N_C, N_D, N_AB, N_ABC, r, mu, n_int_A
         method = 'Nelder-Mead',
         bounds = bnds, 
         options = {
-            'maxiter' : 100,
             'disp': True
         }
     )
