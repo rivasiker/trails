@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.linalg import expm
-import multiprocess as mp
+import multiprocessing as mp
 import os
 from scipy.special import comb
 from ilsmc.get_ABC import get_ABC, get_ABC_inf_bis
