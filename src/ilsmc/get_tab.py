@@ -425,7 +425,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                             ).get()
                             pool.close()
                             end = time.time()
-                            print((0, l, L), (ii, r, R), end - start)
+                            print((0, l, L), (dct_num[i], r, R), end - start)
                             print('Ended!')
                             for l in range(n_int_AB):
                                 cond = [i == ((0, l), 'D') for i in names_tab_AB]
