@@ -5,6 +5,7 @@ import pandas as pd
 from scipy.linalg import expm
 from scipy.special import comb
 from ilsmc.cutpoints import cutpoints_AB, cutpoints_ABC
+from numba import njit
 
 def rate_mat_JC69(mu):
     """
@@ -48,6 +49,7 @@ def p_b_given_a(t, Q):
     df['b'] = [nt[int(i)] for i in df['b']]
     return df
 
+@njit
 def JC69_analytical_integral(aa, bb, cc, dd, t, mu):
     """
     This function calculates the probability of observing the 
@@ -123,7 +125,7 @@ def p_b_c_given_a_JC69_analytical(t, mu):
     df['c'] = [nt[int(i)] for i in df['c']]
     return df
 
-
+@njit
 def JC69_analytical_integral_double(aa, bb, cc, dd, ee, ff, t, mu):
     """
     This function calculates the probability of observing the 

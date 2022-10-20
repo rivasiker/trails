@@ -5,7 +5,9 @@ from ilsmc.get_joint_prob_mat import get_joint_prob_mat
 from scipy.optimize import minimize, basinhopping, fmin_tnc
 from csv import writer
 from dlib import find_max_global
+from numba import njit
 
+@njit
 def forward_loglik(a, b, pi, V):
     alpha = np.zeros((V.shape[0], a.shape[0]))
     alpha[0, :] = np.log(pi * b[:, V[0]])

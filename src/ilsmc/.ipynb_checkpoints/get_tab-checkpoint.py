@@ -3,7 +3,6 @@ from scipy.linalg import expm
 import multiprocessing as mp
 import os
 from scipy.special import comb
-from ilsmc.get_ABC import get_ABC, get_ABC_inf_bis
 from ilsmc.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
 from ilsmc.get_times import get_times
 from ilsmc.get_ordered import get_ordered
