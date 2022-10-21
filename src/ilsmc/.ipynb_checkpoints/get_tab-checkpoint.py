@@ -6,6 +6,7 @@ from scipy.special import comb
 from ilsmc.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
 from ilsmc.get_times import get_times
 from ilsmc.get_ordered import get_ordered
+# import time
 
 def precomp(trans_mat, times):
     """
@@ -258,6 +259,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
     # for the first right coalescent, L is the same for the second left coalescent, and R is the 
     # second right coalescent. Remember that the probability of ((0, l, L) -> (0, r, R)) equals
     # that of ((0, r, R), (0, l, L)).
+    # start = time.time()
     for l in range(n_int_AB):
         for r in range(n_int_AB):
             cond = [i == ((0, l),(0, r)) for i in names_tab_AB]
@@ -277,7 +279,9 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         acc_tot += 1
                     else:
                         continue
-  
+    # end = time.time()
+    # print("(V0 -> V0) = %s" % (end - start))
+    # print()
     
     ##############################
     ### V0 -> deep coalescence ###
@@ -297,6 +301,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
     for L in range(n_int_ABC):
         for r in range(n_int_ABC):
             for R in range(r, n_int_ABC):
+                # start = time.time()
                 if L < r < R:
                     omegas_pre = [omega_tot_ABC]+[om['10']]*L+[om['70']]*(r-L)
                     for i in [3, 5, 6]:
@@ -404,6 +409,14 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                             iter_lst = []
                             for y in range(1, len(omega_lst)):
                                 for z in range(y+1, len(omega_lst)):
+                                    if int(omega_lst[z][0]) < int(omega_lst[y][0]):
+                                        continue
+                                    elif int(omega_lst[z][1]) < int(omega_lst[y][1]):
+                                        continue
+                                    elif (int(omega_lst[z][1])-int(omega_lst[y][1]))==7:
+                                        continue
+                                    elif omega_lst[y][1]=='7':
+                                        continue
                                     tup = (om['%s'%(omega_lst[0],)], 
                                             om['%s'%(omega_lst[y],)],
                                             om['%s'%(omega_lst[z],)])
@@ -449,7 +462,10 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                             acc_tot += 2        
                 else:
                     continue
-                        
+                # end = time.time()
+                # print("((0, {}, {}) -> (i, {}, {})) = {}".format('l', L, r, R, end - start))
+    # print()
+    
     ############################################
     ### Deep coalescence -> deep coalescence ###
     ############################################
@@ -468,6 +484,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
         for L in range(l, n_int_ABC):
             for r in range(n_int_ABC):
                 for R in range(r, n_int_ABC):
+                    # starttim =  time.time()
                     if l < L < r < R:
                         times_ABC = get_times(cut_ABC, [0, l, l+1, L, L+1, r, r+1, R, R+1])
                         for i in [3, 5, 6]:
@@ -618,13 +635,10 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                     acc_tot += 1
                                 else:
                                     iter_lst = []
-                                    for y in ['%s0'%i, '0%s'%j]:
-                                        for z in ['%s7'%i, '7%s'%j]:
-                                            tup = (om['00'], 
-                                                   om['%s'%(y,)],
-                                                   om['%s'%(z,)],
-                                                   om['77'])
-                                            iter_lst.append(tup)
+                                    tup = (om['00'], om['%s0'%i], om['7%s'%j], om['77'])
+                                    iter_lst.append(tup)
+                                    tup = (om['00'], om['0%s'%j], om['%s7'%i], om['77'])
+                                    iter_lst.append(tup)
                                     for y in ['%s%s'%(i,j)]:
                                         for z in ['%s7'%i, '7%s'%j]:
                                             tup = (om['00'], 
@@ -735,6 +749,14 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 iter_lst = []
                                 for y in range(1, len(omega_lst)):
                                     for z in range(y+1, len(omega_lst)):
+                                        if int(omega_lst[z][0]) < int(omega_lst[y][0]):
+                                            continue
+                                        elif int(omega_lst[z][1]) < int(omega_lst[y][1]):
+                                            continue
+                                        elif (int(omega_lst[z][0])-int(omega_lst[y][0]))==7:
+                                            continue
+                                        elif omega_lst[y][0]=='7':
+                                            continue
                                         tup = (om['%s'%(omega_lst[0],)], 
                                                om['%s'%(omega_lst[y],)],
                                                om['%s'%(omega_lst[z],)])
@@ -858,4 +880,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                 acc_tot += 1
                     else:
                         continue
+                    # endtim = time.time()
+                    # print("((i, {}, {}) -> (j, {}, {})) = {}".format(l, L, r, R, endtim - starttim))
+    # print(tab[:, 2].sum())
     return tab
