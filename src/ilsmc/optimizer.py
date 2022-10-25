@@ -7,15 +7,64 @@ from csv import writer
 from dlib import find_max_global
 from numba import njit
 
+
 @njit
 def forward_loglik(a, b, pi, V):
+    alpha = forward(a, b, pi, V)
+    x = alpha[-1, :].max()
+    return np.log(np.exp(alpha[len(V)-1]-x).sum())+x
+
+@njit
+def forward(a, b, pi, V):
     alpha = np.zeros((V.shape[0], a.shape[0]))
     alpha[0, :] = np.log(pi * b[:, V[0]])
     for t in range(1, V.shape[0]):
         x = alpha[t-1, :].max()
-        for j in range(a.shape[0]):
-            alpha[t, j] = np.log(np.exp(alpha[t - 1]-x).dot(a[:, j]) * b[j, V[t]])+x
-    return np.log(np.exp(alpha[len(V)-1]-x).sum())+x
+        alpha[t, :] = np.log((np.exp(alpha[t - 1]-x) @ a) * b[:, V[t]])+x
+    return alpha
+
+@njit
+def backward(a, b, V):
+    beta = np.zeros((V.shape[0], a.shape[0]))
+    beta[V.shape[0] - 1] = np.zeros((a.shape[0]))
+    for t in range(V.shape[0] - 2, -1, -1):
+        x = beta[t+1, :].max()
+        beta[t, :] = np.log((np.exp(beta[t + 1]-x) * b[:, V[t + 1]]) @ a)+x
+    return beta
+
+
+def post_prob(a, b, pi, V):
+    alpha = forward(a, b, pi, V)
+    beta = backward(a, b, V)
+    post_prob = (alpha+beta)
+    max_row = post_prob.max(1).reshape(-1, 1)
+    post_prob = np.exp(post_prob-max_row)/np.exp(post_prob-max_row).sum(1).reshape(-1, 1)
+    return post_prob
+
+@njit
+def viterbi(a, b, pi, V):
+    T = V.shape[0]
+    M = a.shape[0]
+    omega = np.zeros((T, M))
+    omega[0, :] = np.log(pi * b[:, V[0]])
+    prev = np.zeros((T - 1, M))
+    for t in range(1, T):
+        for j in range(M):
+            probability = omega[t - 1] + np.log(a[:, j]) + np.log(b[j, V[t]])
+            prev[t - 1, j] = np.argmax(probability)
+            omega[t, j] = np.max(probability)
+    S = np.zeros(T)
+    last_state = np.argmax(omega[T - 1, :])
+    S[0] = last_state
+    backtrack_index = 1
+    for i in range(T - 2, -1, -1):
+        S[backtrack_index] = prev[i, int(last_state)]
+        last_state = prev[i, int(last_state)]
+        backtrack_index += 1
+    S = np.flip(S)
+    return S
+
+
 
 def write_list(lst, res_name):
     with open('{}.csv'.format(res_name), 'a') as f:
@@ -34,7 +83,7 @@ def trans_emiss_calc(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC)
     t_AB = t_2/N_ref
     t_C = (t_1+t_2)/N_ref
     t_upper = t_upper/N_ref
-    t_peak = 2*(N_ABC/N_ref)
+    t_peak = 2*(N_ref/N_ABC)
     # Recombination rates (r = rec. rate per site per generation)
     rho_A = 2*N_ref*r
     rho_B = 2*N_ref*r
@@ -101,6 +150,53 @@ def optimization_wrapper(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, inf
         )
     info['Nfeval'] += 1
     return -loglik
+
+
+
+
+
+
+def optimization_wrapper_no_mu(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info, mu):
+    t_1, t_2, t_upper, N_AB, N_ABC, r = arg_lst
+    a, b, pi, hidden_names, observed_names = trans_emiss_calc(
+        t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
+    )
+    loglik = forward_loglik(a, b, pi, V)
+    write_list([info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, r, loglik], res_name)
+    if verbose:
+        print(
+            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: .5e}  {7: 3.6f}'.format(
+                info['Nfeval'], 
+                arg_lst[0], arg_lst[1], arg_lst[2], arg_lst[3], 
+                arg_lst[4], arg_lst[5], loglik
+            )
+        )
+    info['Nfeval'] += 1
+    return -loglik
+
+def optimizer_no_mu(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, V, res_name, verbose = False):
+    init_params = np.array([t_1, t_2, t_upper, N_AB, N_ABC, r])
+    
+    b_t = (1e4, 2e6)
+    b_N = (1000, 100000)
+    b_r = (1e-9, 1e-7)
+    # b_mu = (1e-9, 1e-7)
+    bnds = (b_t, b_t, b_t, b_N, b_N, b_r)
+    res = minimize(
+        optimization_wrapper_no_mu, 
+        x0 = init_params,
+        args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0}, mu),
+        method = 'Nelder-Mead',
+        bounds = bnds, 
+        options = {
+            'maxiter': 3000,
+            'disp': True
+        }
+    )
+    
+    
+    
+    
 
 
 
