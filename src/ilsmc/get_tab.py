@@ -421,18 +421,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                                             om['%s'%(omega_lst[y],)],
                                             om['%s'%(omega_lst[z],)])
                                     iter_lst.append(tup)
-                            try:
-                                ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
-                            except KeyError:
-                                ncpus = mp.cpu_count()
-                            pool = mp.Pool(ncpus)
-                            res_tot = []
-                            res_tot = pool.starmap_async(
-                                vanloan_2, 
-                                [(trans_mat_ABC, tup, om['10'],
-                                    om['77'], cut_ABC[r+1]-cut_ABC[r]) for tup in iter_lst]
-                            ).get()
-                            pool.close()
+                            iterable = [(trans_mat_ABC, tup, om['10'], om['77'], cut_ABC[r+1]-cut_ABC[r]) for tup in iter_lst]
+                            res_tot = [vanloan_2(*x) for x in iterable]
                             for l in range(n_int_AB):
                                 cond = [i == ((0, l), 'D') for i in names_tab_AB]
                                 pi = pi_ABC[cond]
@@ -485,13 +475,49 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
         for L in range(l, n_int_ABC):
             for r in range(n_int_ABC):
                 for R in range(r, n_int_ABC):
-                    pool_lst.append((l, L, r, R))
+                    if l < L < r < R:
+                        pool_lst.append((l, L, r, R))
+                    elif l < L == r < R:
+                        pool_lst.append((l, L, r, R))
+                    elif l == r < L < R:
+                        pool_lst.append((l, L, r, R)) 
+                    elif l < r < L < R:
+                        pool_lst.append((l, L, r, R))
+                    elif r < l < L < R:
+                        pool_lst.append((l, L, r, R))
+                    elif l == r < L == R:
+                        pool_lst.append((l, L, r, R))
+                    elif l < r < L == R:
+                        pool_lst.append((l, L, r, R))
+                    elif l == r == L == R:
+                        pool_lst.append((l, L, r, R))
+                    elif l == L < r == R:
+                        pool_lst.append((l, L, r, R))
+                    elif l == L < r < R:
+                        pool_lst.append((l, L, r, R))
+                    elif l == L == r < R:
+                        pool_lst.append((l, L, r, R))
+                    elif l < L == r == R:
+                        pool_lst.append((l, L, r, R))
+                    elif l < L < r == R:
+                        pool_lst.append((l, L, r, R))
+                    elif r < l == L < R:
+                        pool_lst.append((l, L, r, R))
     try:
         ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
     except KeyError:
         ncpus = mp.cpu_count()
-    pool = mp.Pool(ncpus, initializer=init_worker, initargs=(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC,))
-    for result in pool.starmap_async(pool_ABC, pool_lst).get():
+    chunksize, extra = divmod(len(pool_lst), ncpus)
+    if extra:
+        chunksize += 1
+    # print(len(pool_lst))
+    # print(chunksize)
+    pool = mp.Pool(
+        ncpus, 
+        initializer=init_worker, 
+        initargs=(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC,)
+    )
+    for result in pool.starmap_async(pool_ABC, pool_lst, chunksize = chunksize).get():
         for x in result:
             tab[acc_tot] = x
             acc_tot += 1
