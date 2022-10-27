@@ -6,6 +6,7 @@ from scipy.optimize import minimize, basinhopping, fmin_tnc
 from csv import writer
 from dlib import find_max_global
 from numba import njit
+import time
 
 
 @njit
@@ -162,13 +163,13 @@ def optimization_wrapper_no_mu(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbos
         t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
     )
     loglik = forward_loglik(a, b, pi, V)
-    write_list([info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, r, loglik], res_name)
+    write_list([info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, r, loglik, time.time()-info['time']], res_name)
     if verbose:
         print(
-            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: .5e}  {7: 3.6f}'.format(
+            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: .5e}   {7: 3.6f}   {8: 3.6f}'.format(
                 info['Nfeval'], 
                 arg_lst[0], arg_lst[1], arg_lst[2], arg_lst[3], 
-                arg_lst[4], arg_lst[5], loglik
+                arg_lst[4], arg_lst[5], loglik, time.time()-info['time']
             )
         )
     info['Nfeval'] += 1
@@ -185,7 +186,7 @@ def optimizer_no_mu(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, 
     res = minimize(
         optimization_wrapper_no_mu, 
         x0 = init_params,
-        args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0}, mu),
+        args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0, 'time':time.time()}, mu),
         method = 'Nelder-Mead',
         bounds = bnds, 
         options = {
