@@ -299,163 +299,52 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
     # represents a multiple merger event where l = L. Remember that the probability of 
     # ((0, l, L) -> (i, r, R)) and that of ((i, r, R) -> (0, l, L)) is the same. Also,
     # ((0, l, L) -> (1, r, R)) = ((0, l, L) -> (2, r, R)) = ((0, l, L) -> (3, r, R)), following ILS.
-    
+    pool_lst = []
     for L in range(n_int_ABC):
         for r in range(n_int_ABC):
             for R in range(r, n_int_ABC):
-                # start = time.time()
                 if L < r < R:
-                    omegas_pre = [omega_tot_ABC]+[om['10']]*L+[om['70']]*(r-L)
-                    for i in [3, 5, 6]:
-                        ii = dct_num[i]
-                        omegas = omegas_pre+[om['7%s'%i]]*(R-r)+[om['77']]
-                        p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
-                        for l in range(n_int_AB):
-                            cond = [i == ((0, l), 'D') for i in names_tab_AB]
-                            pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
-                            acc_tot += 2
+                    pool_lst.append((L, r, R))
                 elif L == r < R:
-                    omegas_pre = [omega_tot_ABC]+[om['10']]*L
-                    for i in [3, 5, 6]:
-                        ii = dct_num[i]
-                        omegas = omegas_pre+[om['7%s'%i]]*(R-L)+[om['77']]
-                        p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
-                        for l in range(n_int_AB):
-                            cond = [i == ((0, l), 'D') for i in names_tab_AB]
-                            pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
-                            acc_tot += 2
+                    pool_lst.append((L, r, R))
                 elif r < L < R:
-                    omegas_pre = [omega_tot_ABC]+[om['10']]*r
-                    for i in [3, 5, 6]:
-                        ii = dct_num[i]
-                        omegas = omegas_pre+[om['1%s'%i]]*(L-r)+[om['7%s'%i]]*(R-L)+[om['77']]
-                        p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
-                        for l in range(n_int_AB):
-                            cond = [i == ((0, l), 'D') for i in names_tab_AB]
-                            pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
-                            acc_tot += 2
+                    pool_lst.append((L, r, R))
                 elif r < L == R:
-                    omegas_pre = [omega_tot_ABC]+[om['10']]*r
-                    for i in [3, 5, 6]:
-                        ii = dct_num[i]
-                        omegas = omegas_pre+[om['1%s'%i]]*(L-r)+[om['77']]
-                        p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
-                        for l in range(n_int_AB):
-                            cond = [i == ((0, l), 'D') for i in names_tab_AB]
-                            pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
-                            acc_tot += 2
+                    pool_lst.append((L, r, R))
                 elif r < R < L:
-                    omegas_pre = [omega_tot_ABC]+[om['10']]*r
-                    for i in [3, 5, 6]:
-                        ii = dct_num[i]
-                        omegas = omegas_pre+[om['1%s'%i]]*(R-r)+[om['17']]*(L-R)+[om['77']]
-                        p_ABC = get_ABC_precomp(pr, omegas, list(range(L+int(cut_ABC[L+1]!=np.inf))))
-                        for l in range(n_int_AB):
-                            cond = [i == ((0, l), 'D') for i in names_tab_AB]
-                            pi = pi_ABC[cond]
-                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC).sum()]
-                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
-                            acc_tot += 2
+                    pool_lst.append((L, r, R))
                 elif L < r == R:
-                    omegas = [omega_tot_ABC]+[om['10']]*L+[om['70']]*(r-L)
-                    p_ABC = get_ABC_precomp(pr, omegas, list(range(R)))
-                    for i in [3, 5, 6]:
-                        if cut_ABC[r+1] != np.inf:
-                            res = vanloan_1(
-                                trans_mat_ABC, (om['70'], om['7%s'%i]),
-                                om['70'], om['77'], cut_ABC[r+1]-cut_ABC[r])
-                        else:
-                            A_mat = instant_mat(om['70'], om['7%s'%i], trans_mat_ABC)
-                            res = (-np.linalg.inv(trans_mat_ABC[:-2,:-2])@(A_mat[:-2,:-2]))[om['70']][:,om['7%s'%i]]
-                        for l in range(n_int_AB):
-                            cond = [i == ((0, l), 'D') for i in names_tab_AB]
-                            pi = pi_ABC[cond]
-                            ii = dct_num[i]
-                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC@res).sum()]
-                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
-                            acc_tot += 2
+                    pool_lst.append((L, r, R))
                 elif L == r == R:
-                    omegas = [omega_tot_ABC]+[om['10']]*R
-                    p_ABC_pre = get_ABC_precomp(pr, omegas, list(range(R)))
-                    # Get right shapes for first interval
-                    p_ABC = p_ABC_pre[:,om['10']] if L==0 else p_ABC_pre
-                    for i in [3, 5, 6]:
-                        if cut_ABC[r+1] == np.inf:
-                            A_mat = instant_mat(om['10'], om['1%s'%i], trans_mat_ABC)
-                            res_1 = (-np.linalg.inv(trans_mat_ABC[:-2,:-2])@(A_mat[:-2,:-2]))[om['10']][:,om['1%s'%i]]
-                            A_mat = instant_mat(om['10'], om['7%s'%i], trans_mat_ABC)
-                            res_2 = (-np.linalg.inv(trans_mat_ABC[:-2,:-2])@(A_mat[:-2,:-2]))[om['10']][:,om['7%s'%i]]
-                            A_mat_1 = instant_mat(om['10'], om['70'], trans_mat_ABC)
-                            A_mat_2 = instant_mat(om['70'], om['7%s'%i], trans_mat_ABC)
-                            C_mat_upper =  np.concatenate((trans_mat_ABC[:-2,:-2], A_mat_1[:-2,:-2]), axis = 1)
-                            C_mat_lower = np.concatenate((np.zeros((201,201)), trans_mat_ABC[:-2,:-2]), axis = 1)
-                            C_mat = np.concatenate((C_mat_upper, C_mat_lower), axis = 0)
-                            res_3 = ((-np.linalg.inv(C_mat)[0:201,-201:])@(A_mat_2[:-2,:-2]))[om['10']][:,om['7%s'%i]]
-                            for l in range(n_int_AB):
-                                cond = [i == ((0, l), 'D') for i in names_tab_AB]
-                                pi = pi_ABC[cond]
-                                ii = dct_num[i]
-                                tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC@res_1).sum()+(pi@p_ABC@sum([res_2, res_3])).sum()]
-                                tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
-                                acc_tot += 2
-                        else:
-                            omega_lst = ['10', '1%s'%i, '17', '70', '7%s'%i, '77']
-                            iter_lst = []
-                            for y in range(1, len(omega_lst)):
-                                for z in range(y+1, len(omega_lst)):
-                                    if int(omega_lst[z][0]) < int(omega_lst[y][0]):
-                                        continue
-                                    elif int(omega_lst[z][1]) < int(omega_lst[y][1]):
-                                        continue
-                                    elif (int(omega_lst[z][1])-int(omega_lst[y][1]))==7:
-                                        continue
-                                    elif omega_lst[y][1]=='7':
-                                        continue
-                                    tup = (om['%s'%(omega_lst[0],)], 
-                                            om['%s'%(omega_lst[y],)],
-                                            om['%s'%(omega_lst[z],)])
-                                    iter_lst.append(tup)
-                            iterable = [(trans_mat_ABC, tup, om['10'], om['77'], cut_ABC[r+1]-cut_ABC[r]) for tup in iter_lst]
-                            res_tot = [vanloan_2(*x) for x in iterable]
-                            for l in range(n_int_AB):
-                                cond = [i == ((0, l), 'D') for i in names_tab_AB]
-                                pi = pi_ABC[cond]
-                                ii = dct_num[i]
-                                tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC@sum(res_tot)).sum()]
-                                tab[acc_tot+1] = [(ii, r, R), (0, l, L), (pi@p_ABC@sum(res_tot)).sum()]
-                                acc_tot += 2
+                    pool_lst.append((L, r, R))
                 elif r == R < L:
-                    omegas = [omega_tot_ABC]+[om['10']]*R
-                    p_ABC_start_pre = get_ABC_precomp(pr, omegas, list(range(R)))
-                    # Get right shapes for first interval
-                    p_ABC_start = p_ABC_start_pre[:,om['10']] if R==0 else p_ABC_start_pre
-                    omegas = [om['17']]*(L-R)+[om['77']]
-                    p_ABC_end = get_ABC_precomp(pr, omegas, list(range(R+1, L+int(cut_ABC[L+1]!=np.inf))))
-                    for i in [3, 5, 6]:
-                        A_mat = instant_mat(om['10'], om['1%s'%i], trans_mat_ABC)
-                        C_mat_upper = np.concatenate((trans_mat_ABC, A_mat), axis = 1)
-                        C_mat_lower = np.concatenate((np.zeros((203,203)), trans_mat_ABC), axis = 1)
-                        C_mat = np.concatenate((C_mat_upper, C_mat_lower), axis = 0)
-                        res = (expm(C_mat*(cut_ABC[r+1]-cut_ABC[r]))[:203,-203:])[om['10']][:,om['17']]
-                        for l in range(n_int_AB):
-                            cond = [i == ((0, l), 'D') for i in names_tab_AB]
-                            pi = pi_ABC[cond]
-                            ii = dct_num[i]
-                            tab[acc_tot]   = [(0, l, L), (ii, r, R), (pi@p_ABC_start@res@p_ABC_end).sum()]
-                            tab[acc_tot+1] = [(ii, r, R), (0, l, L), tab[acc_tot][2]]
-                            acc_tot += 2        
-                else:
-                    continue
-                # end = time.time()
-                # print("((0, {}, {}) -> (i, {}, {})) = {}".format('l', L, r, R, end - start))
+                    pool_lst.append((L, r, R))
+    # starttim = time.time()
+    if (n_int_AB == 1) and (n_int_ABC < 10):
+        init_worker_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
+        res_lst = [pool_AB(*x) for x in pool_lst]
+        for result in res_lst:
+            for x in result:
+                tab[acc_tot] = x
+                acc_tot += 1
+    else:
+        try:
+            ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+        except KeyError:
+            ncpus = mp.cpu_count()
+        pool = Pool(
+            ncpus, 
+            initializer=init_worker_AB, 
+            initargs=(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB,)
+        )
+        for result in pool.starmap_async(pool_AB, pool_lst).get():
+            for x in result:
+                tab[acc_tot] = x
+                acc_tot += 1
+        pool.close()
+    # endtim = time.time()
+    # print("First {}".format(endtim - starttim))
+    
     # print()
     
     ############################################
@@ -506,30 +395,188 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                         pool_lst.append((l, L, r, R))
                     elif r < l == L < R:
                         pool_lst.append((l, L, r, R))
-    try:
-        ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
-    except KeyError:
-        ncpus = mp.cpu_count()
-    # chunksize, extra = divmod(len(pool_lst), ncpus)
-    # if extra:
-    #     chunksize += 1
-    # print(len(pool_lst))
-    # print(chunksize)
-    pool = Pool(
-        ncpus, 
-        initializer=init_worker, 
-        initargs=(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC,)
-    )
-    for result in pool.starmap_async(pool_ABC, pool_lst).get():
-        for x in result:
-            tab[acc_tot] = x
-            acc_tot += 1
-    pool.close()
+    # starttim = time.time()
+    if n_int_ABC in [1, 2]:
+        init_worker_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
+        res_lst = [pool_ABC(*x) for x in pool_lst]
+        for result in res_lst:
+            for x in result:
+                tab[acc_tot] = x
+                acc_tot += 1
+    else:
+        try:
+            ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+        except KeyError:
+            ncpus = mp.cpu_count()
+        pool = Pool(
+            ncpus, 
+            initializer=init_worker_ABC, 
+            initargs=(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC,)
+        )
+        for result in pool.starmap_async(pool_ABC, pool_lst).get():
+            for x in result:
+                tab[acc_tot] = x
+                acc_tot += 1
+        pool.close()
+    # endtim = time.time()
+    # print("Second {}".format(endtim - starttim))
         
     # print(tab[:, 2].sum())
     return tab
 
-def init_worker(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC):
+
+def pool_AB(L, r, R):
+    pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB = shared_data
+    tab = []
+    # start = time.time()
+    if L < r < R:
+        omegas_pre = [omega_tot_ABC]+[om['10']]*L+[om['70']]*(r-L)
+        for i in [3, 5, 6]:
+            ii = dct_num[i]
+            omegas = omegas_pre+[om['7%s'%i]]*(R-r)+[om['77']]
+            p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
+            for l in range(n_int_AB):
+                cond = [i == ((0, l), 'D') for i in names_tab_AB]
+                pi = pi_ABC[cond]
+                tab.append([(0, l, L), (ii, r, R), (pi@p_ABC).sum()])
+                tab.append([(ii, r, R), (0, l, L), tab[-1][2]])
+    elif L == r < R:
+        omegas_pre = [omega_tot_ABC]+[om['10']]*L
+        for i in [3, 5, 6]:
+            ii = dct_num[i]
+            omegas = omegas_pre+[om['7%s'%i]]*(R-L)+[om['77']]
+            p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
+            for l in range(n_int_AB):
+                cond = [i == ((0, l), 'D') for i in names_tab_AB]
+                pi = pi_ABC[cond]
+                tab.append([(0, l, L), (ii, r, R), (pi@p_ABC).sum()])
+                tab.append([(ii, r, R), (0, l, L), tab[-1][2]])
+    elif r < L < R:
+        omegas_pre = [omega_tot_ABC]+[om['10']]*r
+        for i in [3, 5, 6]:
+            ii = dct_num[i]
+            omegas = omegas_pre+[om['1%s'%i]]*(L-r)+[om['7%s'%i]]*(R-L)+[om['77']]
+            p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
+            for l in range(n_int_AB):
+                cond = [i == ((0, l), 'D') for i in names_tab_AB]
+                pi = pi_ABC[cond]
+                tab.append([(0, l, L), (ii, r, R), (pi@p_ABC).sum()])
+                tab.append([(ii, r, R), (0, l, L), tab[-1][2]])
+    elif r < L == R:
+        omegas_pre = [omega_tot_ABC]+[om['10']]*r
+        for i in [3, 5, 6]:
+            ii = dct_num[i]
+            omegas = omegas_pre+[om['1%s'%i]]*(L-r)+[om['77']]
+            p_ABC = get_ABC_precomp(pr, omegas, list(range(R+int(cut_ABC[R+1]!=np.inf))))
+            for l in range(n_int_AB):
+                cond = [i == ((0, l), 'D') for i in names_tab_AB]
+                pi = pi_ABC[cond]
+                tab.append([(0, l, L), (ii, r, R), (pi@p_ABC).sum()])
+                tab.append([(ii, r, R), (0, l, L), tab[-1][2]])
+    elif r < R < L:
+        omegas_pre = [omega_tot_ABC]+[om['10']]*r
+        for i in [3, 5, 6]:
+            ii = dct_num[i]
+            omegas = omegas_pre+[om['1%s'%i]]*(R-r)+[om['17']]*(L-R)+[om['77']]
+            p_ABC = get_ABC_precomp(pr, omegas, list(range(L+int(cut_ABC[L+1]!=np.inf))))
+            for l in range(n_int_AB):
+                cond = [i == ((0, l), 'D') for i in names_tab_AB]
+                pi = pi_ABC[cond]
+                tab.append([(0, l, L), (ii, r, R), (pi@p_ABC).sum()])
+                tab.append([(ii, r, R), (0, l, L), tab[-1][2]])
+    elif L < r == R:
+        omegas = [omega_tot_ABC]+[om['10']]*L+[om['70']]*(r-L)
+        p_ABC = get_ABC_precomp(pr, omegas, list(range(R)))
+        for i in [3, 5, 6]:
+            if cut_ABC[r+1] != np.inf:
+                res = vanloan_1(
+                    trans_mat_ABC, (om['70'], om['7%s'%i]),
+                    om['70'], om['77'], cut_ABC[r+1]-cut_ABC[r])
+            else:
+                A_mat = instant_mat(om['70'], om['7%s'%i], trans_mat_ABC)
+                res = (-np.linalg.inv(trans_mat_ABC[:-2,:-2])@(A_mat[:-2,:-2]))[om['70']][:,om['7%s'%i]]
+            for l in range(n_int_AB):
+                cond = [i == ((0, l), 'D') for i in names_tab_AB]
+                pi = pi_ABC[cond]
+                ii = dct_num[i]
+                tab.append([(0, l, L), (ii, r, R), (pi@p_ABC@res).sum()])
+                tab.append([(ii, r, R), (0, l, L), tab[-1][2]])
+    elif L == r == R:
+        omegas = [omega_tot_ABC]+[om['10']]*R
+        p_ABC_pre = get_ABC_precomp(pr, omegas, list(range(R)))
+        # Get right shapes for first interval
+        p_ABC = p_ABC_pre[:,om['10']] if L==0 else p_ABC_pre
+        for i in [3, 5, 6]:
+            if cut_ABC[r+1] == np.inf:
+                A_mat = instant_mat(om['10'], om['1%s'%i], trans_mat_ABC)
+                res_1 = (-np.linalg.inv(trans_mat_ABC[:-2,:-2])@(A_mat[:-2,:-2]))[om['10']][:,om['1%s'%i]]
+                A_mat = instant_mat(om['10'], om['7%s'%i], trans_mat_ABC)
+                res_2 = (-np.linalg.inv(trans_mat_ABC[:-2,:-2])@(A_mat[:-2,:-2]))[om['10']][:,om['7%s'%i]]
+                A_mat_1 = instant_mat(om['10'], om['70'], trans_mat_ABC)
+                A_mat_2 = instant_mat(om['70'], om['7%s'%i], trans_mat_ABC)
+                C_mat_upper =  np.concatenate((trans_mat_ABC[:-2,:-2], A_mat_1[:-2,:-2]), axis = 1)
+                C_mat_lower = np.concatenate((np.zeros((201,201)), trans_mat_ABC[:-2,:-2]), axis = 1)
+                C_mat = np.concatenate((C_mat_upper, C_mat_lower), axis = 0)
+                res_3 = ((-np.linalg.inv(C_mat)[0:201,-201:])@(A_mat_2[:-2,:-2]))[om['10']][:,om['7%s'%i]]
+                for l in range(n_int_AB):
+                    cond = [i == ((0, l), 'D') for i in names_tab_AB]
+                    pi = pi_ABC[cond]
+                    ii = dct_num[i]
+                    tab.append([(0, l, L), (ii, r, R), (pi@p_ABC@res_1).sum()+(pi@p_ABC@sum([res_2, res_3])).sum()])
+                    tab.append([(ii, r, R), (0, l, L), tab[-1][2]])
+            else:
+                omega_lst = ['10', '1%s'%i, '17', '70', '7%s'%i, '77']
+                iter_lst = []
+                for y in range(1, len(omega_lst)):
+                    for z in range(y+1, len(omega_lst)):
+                        if int(omega_lst[z][0]) < int(omega_lst[y][0]):
+                            continue
+                        elif int(omega_lst[z][1]) < int(omega_lst[y][1]):
+                            continue
+                        elif (int(omega_lst[z][1])-int(omega_lst[y][1]))==7:
+                            continue
+                        elif omega_lst[y][1]=='7':
+                            continue
+                        tup = (om['%s'%(omega_lst[0],)], 
+                                om['%s'%(omega_lst[y],)],
+                                om['%s'%(omega_lst[z],)])
+                        iter_lst.append(tup)
+                iterable = [(trans_mat_ABC, tup, om['10'], om['77'], cut_ABC[r+1]-cut_ABC[r]) for tup in iter_lst]
+                res_tot = [vanloan_2(*x) for x in iterable]
+                for l in range(n_int_AB):
+                    cond = [i == ((0, l), 'D') for i in names_tab_AB]
+                    pi = pi_ABC[cond]
+                    ii = dct_num[i]
+                    tab.append([(0, l, L), (ii, r, R), (pi@p_ABC@sum(res_tot)).sum()])
+                    tab.append([(ii, r, R), (0, l, L), tab[-1][2]])
+    elif r == R < L:
+        omegas = [omega_tot_ABC]+[om['10']]*R
+        p_ABC_start_pre = get_ABC_precomp(pr, omegas, list(range(R)))
+        # Get right shapes for first interval
+        p_ABC_start = p_ABC_start_pre[:,om['10']] if R==0 else p_ABC_start_pre
+        omegas = [om['17']]*(L-R)+[om['77']]
+        p_ABC_end = get_ABC_precomp(pr, omegas, list(range(R+1, L+int(cut_ABC[L+1]!=np.inf))))
+        for i in [3, 5, 6]:
+            A_mat = instant_mat(om['10'], om['1%s'%i], trans_mat_ABC)
+            C_mat_upper = np.concatenate((trans_mat_ABC, A_mat), axis = 1)
+            C_mat_lower = np.concatenate((np.zeros((203,203)), trans_mat_ABC), axis = 1)
+            C_mat = np.concatenate((C_mat_upper, C_mat_lower), axis = 0)
+            res = (expm(C_mat*(cut_ABC[r+1]-cut_ABC[r]))[:203,-203:])[om['10']][:,om['17']]
+            for l in range(n_int_AB):
+                cond = [i == ((0, l), 'D') for i in names_tab_AB]
+                pi = pi_ABC[cond]
+                ii = dct_num[i]
+                tab.append([(0, l, L), (ii, r, R), (pi@p_ABC_start@res@p_ABC_end).sum()])
+                tab.append([(ii, r, R), (0, l, L), tab[-1][2]])
+    # end = time.time()
+    # print("((0, {}, {}) -> (i, {}, {})) = {}".format('l', L, r, R, end - start))
+    return tab
+
+def init_worker_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB):
+    global shared_data
+    shared_data = (pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
+
+def init_worker_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC):
     global shared_data
     shared_data = (pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
     
