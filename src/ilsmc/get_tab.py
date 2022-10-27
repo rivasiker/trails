@@ -472,6 +472,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
     # ((i, l, L) -> (1, r, R)) = ((i, l, L) -> (2, r, R)) = ((i, l, L) -> (3, r, R)), following ILS.
     cond = [i == ('D','D') for i in names_tab_AB]
     pi = pi_ABC[cond]
+    # The number of tasks is satistied by n*(n+1)*(n**2+n+2)/8 (A002817)
     pool_lst = []
     for l in range(n_int_ABC):
         for L in range(l, n_int_ABC):
