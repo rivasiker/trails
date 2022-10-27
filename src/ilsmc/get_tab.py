@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.linalg import expm
+# import multiprocessing as mp
 import multiprocessing as mp
+from ray.util.multiprocessing import Pool
 import os
 from scipy.special import comb
 from ilsmc.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
@@ -507,17 +509,17 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
         ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
     except KeyError:
         ncpus = mp.cpu_count()
-    chunksize, extra = divmod(len(pool_lst), ncpus)
-    if extra:
-        chunksize += 1
+    # chunksize, extra = divmod(len(pool_lst), ncpus)
+    # if extra:
+    #     chunksize += 1
     # print(len(pool_lst))
     # print(chunksize)
-    pool = mp.Pool(
+    pool = Pool(
         ncpus, 
         initializer=init_worker, 
         initargs=(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC,)
     )
-    for result in pool.starmap_async(pool_ABC, pool_lst, chunksize = chunksize).get():
+    for result in pool.starmap_async(pool_ABC, pool_lst).get():
         for x in result:
             tab[acc_tot] = x
             acc_tot += 1
