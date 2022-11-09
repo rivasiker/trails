@@ -181,7 +181,7 @@ def optimizer_no_mu(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, 
     
     b_t = (1e4, 2e6)
     b_N = (1000, 100000)
-    b_r = (1e-9, 1e-7)
+    b_r = (1e-10, 1e-7)
     # b_mu = (1e-9, 1e-7)
     bnds = (b_t, b_t, b_t, b_N, b_N, b_r)
     res = minimize(
