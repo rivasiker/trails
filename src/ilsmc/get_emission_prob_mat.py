@@ -759,6 +759,8 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
             a1b1_ab0_mu = mu_AB
             ab1c1_abc0_t = cut_ABC[j+1]-cut_ABC[j] if j!=(n_int_ABC-1) else t_upper
             ab1c1_abc0_mu = mu_ABC
+            
+            
             add = t_upper+cut_ABC[n_int_ABC-1]-cut_ABC[j+1] if j!=(n_int_ABC-1) else 0
             d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
             d0_abc0_mu_vec = [mu_D, mu_ABC]

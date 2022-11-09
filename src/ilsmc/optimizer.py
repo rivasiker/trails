@@ -98,12 +98,13 @@ def trans_emiss_calc(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC)
     coal_C = N_ref/N_ref
     coal_ABC = N_ABC/N_ref
     # Mutation rates (mu = mut. rate per site per generation)
-    mu_A = 2*N_ref*mu
-    mu_B = 2*N_ref*mu
-    mu_C = 2*N_ref*mu
-    mu_D = 2*N_ref*mu
-    mu_AB = 2*N_ref*mu
-    mu_ABC = 2*N_ref*mu
+    mu_ = mu*(4/3) # For Jukes-Cantor model
+    mu_A = 2*N_ref*mu_
+    mu_B = 2*N_ref*mu_
+    mu_C = 2*N_ref*mu_
+    mu_D = 2*N_ref*mu_
+    mu_AB = 2*N_ref*mu_
+    mu_ABC = 2*N_ref*mu_
     
     tr = get_joint_prob_mat(
         t_A,    t_B,    t_AB,    t_C, 
