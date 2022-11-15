@@ -199,6 +199,49 @@ def optimizer_no_mu(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, 
     
     
     
+    
+    
+    
+
+    
+def optimization_wrapper_no_mu_rho(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info, mu, rho):
+    t_1, t_2, t_upper, N_AB, N_ABC = arg_lst
+    a, b, pi, hidden_names, observed_names = trans_emiss_calc(
+        t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
+    )
+    loglik = forward_loglik(a, b, pi, V)
+    write_list([info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, loglik, time.time()-info['time']], res_name)
+    if verbose:
+        print(
+            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: 3.6f}   {7: 3.6f}'.format(
+                info['Nfeval'], 
+                arg_lst[0], arg_lst[1], arg_lst[2], arg_lst[3], 
+                arg_lst[4], loglik, time.time()-info['time']
+            )
+        )
+    info['Nfeval'] += 1
+    return -loglik
+
+def optimizer_no_mu_rho(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, V, res_name, verbose = False):
+    init_params = np.array([t_1, t_2, t_upper, N_AB, N_ABC])
+    
+    b_t = (1e4, 2e6)
+    b_N = (1000, 100000)
+    # b_r = (1e-10, 1e-7)
+    # b_mu = (1e-9, 1e-7)
+    bnds = (b_t, b_t, b_t, b_N, b_N)
+    res = minimize(
+        optimization_wrapper_no_mu_rho, 
+        x0 = init_params,
+        args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0, 'time':time.time()}, mu, rho),
+        method = 'Nelder-Mead',
+        bounds = bnds, 
+        options = {
+            'maxiter': 3000,
+            'disp': True
+        }
+    )
+    
 
 
 
