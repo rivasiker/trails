@@ -204,7 +204,7 @@ def optimizer_no_mu(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, 
     
 
     
-def optimization_wrapper_no_mu_rho(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info, mu, rho):
+def optimization_wrapper_no_mu_rho(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info, mu, r):
     t_1, t_2, t_upper, N_AB, N_ABC = arg_lst
     a, b, pi, hidden_names, observed_names = trans_emiss_calc(
         t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
@@ -233,7 +233,7 @@ def optimizer_no_mu_rho(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_A
     res = minimize(
         optimization_wrapper_no_mu_rho, 
         x0 = init_params,
-        args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0, 'time':time.time()}, mu, rho),
+        args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0, 'time':time.time()}, mu, r),
         method = 'Nelder-Mead',
         bounds = bnds, 
         options = {
