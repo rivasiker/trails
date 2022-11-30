@@ -475,7 +475,7 @@ def calc_emissions_single_JC69(
     # Second coalescent
     df_second = p_b_c_given_a_JC69_analytical(t = ab1c1_abc0_t, mu = ab1c1_abc0_mu)
     df_second = b_c_given_a_to_dict_a_b_c(df_second)
-    # df_second[a1][b1][ab0]
+    # df_second[ab1][c1][abc0]
     
     emissions = {}
     for a0 in ['A', 'C', 'T', 'G']:
@@ -492,9 +492,9 @@ def calc_emissions_single_JC69(
                                             res = 1
                                             res = res*df_a[a0][a1]
                                             res = res*df_b[b1][b0]
-                                            res = res*df_first[a1][ab0][b1]
+                                            res = res*df_first[a1][b1][ab0]
                                             res = res*df_ab[ab0][ab1]
-                                            res = res*df_second[ab1][abc0][c1]
+                                            res = res*df_second[ab1][c1][abc0]
                                             res = res*df_c[c1][c0]
                                             res = res*df_d[abc0][d0]
                                             acc += res
