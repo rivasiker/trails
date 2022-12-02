@@ -88,9 +88,9 @@ def trans_emiss_calc(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC)
     # Recombination rates (r = rec. rate per site per generation)
     rho_A = 2*N_ref*r
     rho_B = 2*N_ref*r
-    rho_AB = 2*N_ref*r
+    rho_AB = 2*N_AB*r
     rho_C = 2*N_ref*r
-    rho_ABC = 2*N_ref*r
+    rho_ABC = 2*N_ABC*r
     # Coalescent rates
     coal_A = N_ref/N_ref
     coal_B = N_ref/N_ref
