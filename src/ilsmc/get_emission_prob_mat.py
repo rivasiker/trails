@@ -456,10 +456,10 @@ def calc_emissions_single_JC69(
     # df_c[c1][c0]
     
     # abc0 to d0
-    Q_vec = [rate_mat_JC69(i) for i in d0_abc0_mu_vec]
-    df_d = p_b_given_a(t = d0_abc0_t_vec, Q = Q_vec)
+    Q_vec = [rate_mat_JC69(i) for i in list(reversed(d0_abc0_mu_vec))]
+    df_d = p_b_given_a(t = list(reversed(d0_abc0_t_vec)), Q = Q_vec)
     df_d = b_given_a_to_dict_a_b(df_d)
-    # df_d[d0][abc0]
+    # df_d[abc0][d0]
     
     # ab0 to ab1
     Q_vec = [rate_mat_JC69(i) for i in ab0_ab1_mu_vec]
@@ -496,7 +496,7 @@ def calc_emissions_single_JC69(
                                             res = res*df_ab[ab0][ab1]
                                             res = res*df_second[ab1][c1][abc0]
                                             res = res*df_c[c1][c0]
-                                            res = res*df_d[d0][abc0]
+                                            res = res*df_d[abc0][d0]
                                             acc += res
                     emissions[a0+b0+c0+d0] = acc/4
                 
