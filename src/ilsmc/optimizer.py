@@ -83,7 +83,7 @@ def trans_emiss_calc(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC)
     t_B = t_1/N_ref
     t_AB = t_2/N_ref
     t_C = (t_1+t_2)/N_ref
-    t_upper = t_upper/N_ref
+    t_upper = t_upper/N_ABC
     t_peak = 2*(N_ABC/N_ref)
     # Recombination rates (r = rec. rate per site per generation)
     rho_A = 2*N_ref*r
