@@ -77,7 +77,7 @@ def write_list(lst, res_name):
 
 def trans_emiss_calc(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC):
     # Reference Ne (for normalization)
-    N_ref = N_AB
+    N_ref = N_ABC
     # Speciation times (in coalescent units, i.e. number of generations / N_ref)
     t_A = t_1/N_ref
     t_B = t_1/N_ref
