@@ -2,8 +2,7 @@ import numpy as np
 import pandas as pd
 from ilsmc.get_emission_prob_mat import get_emission_prob_mat
 from ilsmc.get_joint_prob_mat import get_joint_prob_mat
-from scipy.optimize import minimize, basinhopping, fmin_tnc
-from csv import writer
+from scipy.optimize import minimize
 from dlib import find_max_global
 from numba import njit
 import time
@@ -64,8 +63,6 @@ def viterbi(a, b, pi, V):
         backtrack_index += 1
     S = np.flip(S)
     return S
-
-
 
 def write_list(lst, res_name):
     with open('{}.csv'.format(res_name), 'a') as f:
@@ -196,152 +193,3 @@ def optimizer_no_mu(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, 
         }
     )
     
-    
-    
-    
-    
-    
-    
-
-    
-def optimization_wrapper_no_mu_rho(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info, mu, r):
-    t_1, t_2, t_upper, N_AB, N_ABC = arg_lst
-    a, b, pi, hidden_names, observed_names = trans_emiss_calc(
-        t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
-    )
-    loglik = forward_loglik(a, b, pi, V)
-    write_list([info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, loglik, time.time()-info['time']], res_name)
-    if verbose:
-        print(
-            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: 3.6f}   {7: 3.6f}'.format(
-                info['Nfeval'], 
-                arg_lst[0], arg_lst[1], arg_lst[2], arg_lst[3], 
-                arg_lst[4], loglik, time.time()-info['time']
-            )
-        )
-    info['Nfeval'] += 1
-    return -loglik
-
-def optimizer_no_mu_rho(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, V, res_name, verbose = False):
-    init_params = np.array([t_1, t_2, t_upper, N_AB, N_ABC])
-    
-    b_t = (1e4, 2e6)
-    b_N = (1000, 100000)
-    # b_r = (1e-10, 1e-7)
-    # b_mu = (1e-9, 1e-7)
-    bnds = (b_t, b_t, b_t, b_N, b_N)
-    res = minimize(
-        optimization_wrapper_no_mu_rho, 
-        x0 = init_params,
-        args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0, 'time':time.time()}, mu, r),
-        method = 'Nelder-Mead',
-        bounds = bnds, 
-        options = {
-            'maxiter': 3000,
-            'disp': True
-        }
-    )
-    
-
-
-
-def optimizer(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, V, res_name, verbose = False):
-    init_params = np.array([t_1, t_2, t_upper, N_AB, N_ABC, r, mu])
-    
-    b_t = (1e4, 2e6)
-    b_N = (1000, 100000)
-    b_r = (1e-9, 1e-7)
-    b_mu = (1e-9, 1e-7)
-    bnds = (b_t, b_t, b_t, b_N, b_N, b_r, b_mu)
-    res = minimize(
-        optimization_wrapper, 
-        x0 = init_params,
-        args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0}),
-        method = 'Nelder-Mead',
-        bounds = bnds, 
-        options = {
-            'maxiter': 3000,
-            'disp': True
-        }
-    )
-    
-    # res = basinhopping(
-    #     optimization_wrapper,
-    #     x0 = init_params,
-    #     minimizer_kwargs = {
-    #         'args' : (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0}),
-    #         'method' : "Nelder-Mead",
-    #         'bounds' : bnds,
-    #         'options' : {
-    #             'maxiter': 100,
-    #             'disp': True
-    #         }
-    #     }
-    # )
-    
-    # res = fmin_tnc(
-    #     optimization_wrapper, 
-    #     x0 = init_params,
-    #     args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0}),
-    #     bounds = bnds, 
-    #     approx_grad = True,
-    #     maxfun = 3000,
-    #     disp = True
-    # )
-    
-    return res
-
-
-
-
-
-def optimization_wrapper_lipo(t_1, t_2, t_upper, N_AB, N_ABC, r, mu):
-    a, b, pi, hidden_names, observed_names = trans_emiss_calc(
-        t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB_l, n_int_ABC_l
-    )
-    loglik = forward_loglik(a, b, pi, V_l)
-    write_list([info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, r, mu, loglik], res_name_l)
-    if verbose_l:
-        print(
-            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: .5e}   {7: .5e}   {8: 3.6f}'.format(
-                info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, r, mu, loglik
-            )
-        )
-    info['Nfeval'] += 1
-    return loglik
-
-def optimizer_lipo(n_int_AB, n_int_ABC, V, res_name, verbose = False):
-    
-    global n_int_AB_l
-    global n_int_ABC_l
-    global V_l
-    global res_name_l
-    global verbose_l
-    global info
-    
-    info = {'Nfeval':0}
-    n_int_AB_l = n_int_AB
-    n_int_ABC_l = n_int_ABC
-    V_l = V
-    res_name_l = res_name
-    verbose_l = verbose
-    
-    b_t_1 = (1e5, 3e5)
-    b_t_2 = (3e4, 4e4)
-    b_t_upper = (4e5, 6e5)
-    b_N_AB = (20000, 40000)
-    b_N_ABC = (30000, 50000)
-    b_r = (5e-9, 2e-8)
-    b_mu = (1e-8, 3e-8)
-    lower_bnds = [b_t_1[0], b_t_2[0], b_t_upper[0], b_N_AB[0], b_N_ABC[0], b_r[0], b_mu[0]]
-    upper_bnds = [b_t_1[1], b_t_2[1], b_t_upper[1], b_N_AB[1], b_N_ABC[1], b_r[1], b_mu[1]]
-    
-    
-    res, y = find_max_global(
-        optimization_wrapper_lipo, 
-        lower_bnds, 
-        upper_bnds,
-        5000
-    )
-    
-    return res, y
