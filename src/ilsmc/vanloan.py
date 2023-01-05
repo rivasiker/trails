@@ -53,9 +53,8 @@ def vanloan_1(trans_mat, tup, omega_start, omega_end, time):
     """
     n = trans_mat.shape[0]
     C_mat = np.zeros((n*2,n*2))
-    A_01 = instant_mat(tup[0], tup[1], trans_mat)
     C_mat[0:n,0:n] = trans_mat
-    C_mat[0:n,n:(n*2)] = A_01
+    C_mat[0:n,n:(n*2)] = instant_mat(tup[0], tup[1], trans_mat)
     C_mat[n:(n*2),n:(n*2)] = trans_mat
     res_test = (expm(C_mat*(time))[0:n,-n:])[omega_start][:,omega_end]
     return res_test
@@ -85,12 +84,10 @@ def vanloan_2(trans_mat, tup, omega_start, omega_end, time):
     """
     n = trans_mat.shape[0]
     C_mat = np.zeros((n*3,n*3))
-    A_01 = instant_mat(tup[0], tup[1], trans_mat)
-    A_12 = instant_mat(tup[1], tup[2], trans_mat)
     C_mat[0:n,0:n] = trans_mat
-    C_mat[0:n,n:(n*2)] = A_01
+    C_mat[0:n,n:(n*2)] = instant_mat(tup[0], tup[1], trans_mat)
     C_mat[n:(n*2),n:(n*2)] = trans_mat
-    C_mat[n:(n*2),(n*2):(n*3)] = A_12
+    C_mat[n:(n*2),(n*2):(n*3)] = instant_mat(tup[1], tup[2], trans_mat)
     C_mat[(n*2):(n*3),(n*2):(n*3)] = trans_mat
     res_test = (expm(C_mat*(time))[0:n,-n:])[omega_start][:,omega_end]
     return res_test
@@ -120,15 +117,12 @@ def vanloan_3(trans_mat, tup, omega_start, omega_end, time):
     """
     n = trans_mat.shape[0]
     C_mat = np.zeros((n*4,n*4))
-    A_01 = instant_mat(tup[0], tup[1], trans_mat)
-    A_12 = instant_mat(tup[1], tup[2], trans_mat)
-    A_23 = instant_mat(tup[2], tup[3], trans_mat)
     C_mat[0:n,0:n] = trans_mat
-    C_mat[0:n,n:(n*2)] = A_01
+    C_mat[0:n,n:(n*2)] = instant_mat(tup[0], tup[1], trans_mat)
     C_mat[n:(n*2),n:(n*2)] = trans_mat
-    C_mat[n:(n*2),(n*2):(n*3)] = A_12
+    C_mat[n:(n*2),(n*2):(n*3)] = instant_mat(tup[1], tup[2], trans_mat)
     C_mat[(n*2):(n*3),(n*2):(n*3)] = trans_mat
-    C_mat[(n*2):(n*3),(n*3):(n*4)] = A_23
+    C_mat[(n*2):(n*3),(n*3):(n*4)] = instant_mat(tup[2], tup[3], trans_mat)
     C_mat[(n*3):(n*4),(n*3):(n*4)] = trans_mat
     res_test = (expm(C_mat*(time))[0:n,-n:])[omega_start][:,omega_end]
     return res_test
