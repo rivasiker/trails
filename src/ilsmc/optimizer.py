@@ -3,7 +3,6 @@ import pandas as pd
 from ilsmc.get_emission_prob_mat import get_emission_prob_mat
 from ilsmc.get_joint_prob_mat import get_joint_prob_mat
 from scipy.optimize import minimize
-from dlib import find_max_global
 from numba import njit
 import time
 
