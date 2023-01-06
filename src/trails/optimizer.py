@@ -177,7 +177,7 @@ def optimization_wrapper_no_mu_t(arg_lst, n_int_AB, n_int_ABC, V, res_name, verb
         t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu, mu, mu, mu, mu, mu, n_int_AB, n_int_ABC
     )
     loglik = forward_loglik(a, b, pi, V)
-    write_list([info['Nfeval'], t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, loglik, time.time()-info['time']], res_name)
+    write_list([info['Nfeval'], t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, loglik, time.time()-info['time']], res_name)
     if verbose:
         print(
             '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: .5e}   {7: .5e}   {8: .5e}   {9: .5e}   {10: 3.6f}   {11: 3.6f}'.format(
