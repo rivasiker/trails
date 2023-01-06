@@ -1,11 +1,11 @@
 Metadata-Version: 2.1
-Name: ilsmc-rivasiker
-Version: 0.0.6
-Summary: A phylogenetically aware SMC to infer the evolutionary history of species
-Home-page: https://github.com/rivasiker/ilsmc
+Name: trails-rivasiker
+Version: 0.0.1
+Summary: Tree reconstruction of the ancestry using incomplete lineage sorting
+Home-page: https://github.com/rivasiker/trails
 Author: Iker Rivas-González
 Author-email: irg@birc.au.dk
-Project-URL: Bug Tracker, https://github.com/rivasiker/ilsmc/issues
+Project-URL: Bug Tracker, https://github.com/rivasiker/trails/issues
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
@@ -13,10 +13,10 @@ Requires-Python: >=3.6
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
-# ILSMC: basic example
+# TRAILS: basic example
 
 ```python
-from ilsmc.get_joint_prob_mat import get_joint_prob_mat
+from trails.get_joint_prob_mat import get_joint_prob_mat
 import pandas as pd
 
 arr = get_joint_prob_mat(
