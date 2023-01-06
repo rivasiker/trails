@@ -71,14 +71,14 @@ def write_list(lst, res_name):
                 f.write(',')
         f.write('\n')
 
-def trans_emiss_calc(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC):
+def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC, n_int_AB, n_int_ABC):
     # Reference Ne (for normalization)
     N_ref = N_ABC
     # Speciation times (in coalescent units, i.e. number of generations / N_ref)
-    t_A = t_1/N_ref
-    t_B = t_1/N_ref
+    t_A = t_A/N_ref
+    t_B = t_B/N_ref
     t_AB = t_2/N_ref
-    t_C = (t_1+t_2)/N_ref
+    t_C = (t_C+t_2)/N_ref
     t_upper = t_upper/N_ref
     t_peak = 2*(N_ABC/N_ref)
     # Recombination rates (r = rec. rate per site per generation)
@@ -94,13 +94,12 @@ def trans_emiss_calc(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC)
     coal_C = N_ref/N_AB
     coal_ABC = N_ref/N_ABC
     # Mutation rates (mu = mut. rate per site per generation)
-    mu_ = mu*(4/3) # For Jukes-Cantor model
-    mu_A = 2*N_ref*mu_
-    mu_B = 2*N_ref*mu_
-    mu_C = 2*N_ref*mu_
-    mu_D = 2*N_ref*mu_
-    mu_AB = 2*N_ref*mu_
-    mu_ABC = 2*N_ref*mu_
+    mu_A = 2*N_ref*mu_A*(4/3)
+    mu_B = 2*N_ref*mu_B*(4/3)
+    mu_C = 2*N_ref*mu_C*(4/3)
+    mu_D = 2*N_ref*mu_D*(4/3)
+    mu_AB = 2*N_ref*mu_AB*(4/3)
+    mu_ABC = 2*N_ref*mu_ABC*(4/3)
     
     tr = get_joint_prob_mat(
         t_A,    t_B,    t_AB,    t_C, 
@@ -131,33 +130,10 @@ def trans_emiss_calc(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC)
     
     return a, b, pi, hidden_names, observed_names
 
-def optimization_wrapper(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info):
-    t_1, t_2, t_upper, N_AB, N_ABC, r, mu = arg_lst
-    a, b, pi, hidden_names, observed_names = trans_emiss_calc(
-        t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
-    )
-    loglik = forward_loglik(a, b, pi, V)
-    write_list([info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, r, mu, loglik], res_name)
-    if verbose:
-        print(
-            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: .5e}   {7: .5e}   {8: 3.6f}'.format(
-                info['Nfeval'], 
-                arg_lst[0], arg_lst[1], arg_lst[2], arg_lst[3], 
-                arg_lst[4], arg_lst[5], arg_lst[6], loglik
-            )
-        )
-    info['Nfeval'] += 1
-    return -loglik
-
-
-
-
-
-
 def optimization_wrapper_no_mu(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info, mu):
     t_1, t_2, t_upper, N_AB, N_ABC, r = arg_lst
     a, b, pi, hidden_names, observed_names = trans_emiss_calc(
-        t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC
+        t_1, t_1, t_1, t_2, t_upper, N_AB, N_ABC, r, mu, mu, mu, mu, mu, mu, n_int_AB, n_int_ABC
     )
     loglik = forward_loglik(a, b, pi, V)
     write_list([info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, r, loglik, time.time()-info['time']], res_name)
@@ -182,6 +158,45 @@ def optimizer_no_mu(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, 
     bnds = (b_t, b_t, b_t, b_N, b_N, b_r)
     res = minimize(
         optimization_wrapper_no_mu, 
+        x0 = init_params,
+        args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0, 'time':time.time()}, mu),
+        method = 'Nelder-Mead',
+        bounds = bnds, 
+        options = {
+            'maxiter': 3000,
+            'disp': True
+        }
+    )
+
+def optimization_wrapper_no_mu_t(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info, mu):
+    t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r = arg_lst
+    a, b, pi, hidden_names, observed_names = trans_emiss_calc(
+        t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, mu, mu, mu, mu, mu, mu, n_int_AB, n_int_ABC
+    )
+    loglik = forward_loglik(a, b, pi, V)
+    write_list([info['Nfeval'], t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, loglik, time.time()-info['time']], res_name)
+    if verbose:
+        print(
+            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: .5e}   {7: .5e}   {8: .5e}   {9: 3.6f}   {10: 3.6f}'.format(
+                info['Nfeval'], 
+                arg_lst[0], arg_lst[1], arg_lst[2], arg_lst[3], 
+                arg_lst[4], arg_lst[5], arg_lst[6], arg_lst[7],
+                loglik, time.time()-info['time']
+            )
+        )
+    info['Nfeval'] += 1
+    return -loglik
+
+def optimizer_no_mu_t(t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, V, res_name, verbose = False):
+    init_params = np.array([t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r])
+    
+    b_t = (1e4, 2e6)
+    b_N = (1000, 100000)
+    b_r = (1e-10, 1e-7)
+    # b_mu = (1e-9, 1e-7)
+    bnds = (b_t, b_t, b_t, b_t, b_t, b_t, b_N, b_N, b_r)
+    res = minimize(
+        optimization_wrapper_no_mu_t, 
         x0 = init_params,
         args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0, 'time':time.time()}, mu),
         method = 'Nelder-Mead',
