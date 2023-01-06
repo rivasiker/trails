@@ -198,7 +198,7 @@ def optimizer_no_mu_t(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu, n_
     b_N = (1000, 100000)
     b_r = (1e-10, 1e-7)
     # b_mu = (1e-9, 1e-7)
-    bnds = (b_t, b_t, b_t, b_t, b_t, b_t, b_out, b_N, b_N, b_r)
+    bnds = (b_t, b_t, b_t, b_t, b_t, b_out, b_N, b_N, b_r)
     res = minimize(
         optimization_wrapper_no_mu_t, 
         x0 = init_params,
