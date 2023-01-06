@@ -585,7 +585,7 @@ def calc_emissions_double_JC69(
 
 
 
-def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
+def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,
                           rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
                           coal_A, coal_B, coal_AB, coal_C, coal_ABC,
                           n_int_AB, n_int_ABC,
@@ -649,7 +649,9 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
             ab1c1_abc0_t = (cut_ABC[j+1]-cut_ABC[j]) if j!=(n_int_ABC-1) else t_upper
             ab1c1_abc0_mu = mu_ABC
             add = t_upper+cut_ABC[n_int_ABC-1]-cut_ABC[j+1] if j!=(n_int_ABC-1) else 0
-            d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
+            # d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
+            d0_abc0_t_vec = [t_out]+[add]
+            # d0_abc0_mu_vec = [mu_D, mu_ABC]
             d0_abc0_mu_vec = [mu_D, mu_ABC]
             
             # V1 states
@@ -703,7 +705,9 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
         a1b1c1_abc0_t = (cut_ABC[i+1]-cut_ABC[i]) if i!=(n_int_ABC-1) else t_upper
         a1b1c1_abc0_mu = mu_ABC
         add = t_upper+cut_ABC[n_int_ABC-1]-cut_ABC[i+1] if i!=(n_int_ABC-1) else 0
-        d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
+        # d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
+        d0_abc0_t_vec = [t_out]+[add]
+        # d0_abc0_mu_vec = [mu_D, mu_ABC]
         d0_abc0_mu_vec = [mu_D, mu_ABC]
         
         # V1 states
@@ -757,10 +761,10 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
             a1b1_ab0_mu = mu_AB
             ab1c1_abc0_t = cut_ABC[j+1]-cut_ABC[j] if j!=(n_int_ABC-1) else t_upper
             ab1c1_abc0_mu = mu_ABC
-            
-            
             add = t_upper+cut_ABC[n_int_ABC-1]-cut_ABC[j+1] if j!=(n_int_ABC-1) else 0
-            d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
+            # d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
+            d0_abc0_t_vec = [t_out]+[add]
+            # d0_abc0_mu_vec = [mu_D, mu_ABC]
             d0_abc0_mu_vec = [mu_D, mu_ABC]
             
             emissions = calc_emissions_single_JC69(

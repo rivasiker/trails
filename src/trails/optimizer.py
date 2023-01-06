@@ -3,6 +3,7 @@ import pandas as pd
 from trails.get_emission_prob_mat import get_emission_prob_mat
 from trails.get_joint_prob_mat import get_joint_prob_mat
 from scipy.optimize import minimize
+from trails.cutpoints import cutpoints_ABC
 from numba import njit
 import time
 
@@ -71,7 +72,7 @@ def write_list(lst, res_name):
                 f.write(',')
         f.write('\n')
 
-def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC, n_int_AB, n_int_ABC):
+def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC, n_int_AB, n_int_ABC):
     # Reference Ne (for normalization)
     N_ref = N_ABC
     # Speciation times (in coalescent units, i.e. number of generations / N_ref)
@@ -80,7 +81,7 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, mu_A, mu_B, mu
     t_AB = t_2/N_ref
     t_C = (t_C+t_2)/N_ref
     t_upper = t_upper/N_ref
-    t_peak = 2*(N_ABC/N_ref)
+    t_out = t_out/N_ref
     # Recombination rates (r = rec. rate per site per generation)
     rho_A = 2*N_ref*r
     rho_B = 2*N_ref*r
@@ -115,7 +116,7 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, mu_A, mu_B, mu
     a = arr/pi[:,None]
     
     em = get_emission_prob_mat(
-        t_A,    t_B,    t_AB,    t_C,    t_upper,   t_peak,
+        t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
         coal_A, coal_B, coal_AB, coal_C, coal_ABC,
         n_int_AB, n_int_ABC,
@@ -132,8 +133,10 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, mu_A, mu_B, mu
 
 def optimization_wrapper_no_mu(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info, mu):
     t_1, t_2, t_upper, N_AB, N_ABC, r = arg_lst
+    cut_ABC = cutpoints_ABC(n_int_ABC, 1)
+    t_out = t_1+t_2+cut_ABC[n_int_ABC-1]+t_upper+2
     a, b, pi, hidden_names, observed_names = trans_emiss_calc(
-        t_1, t_1, t_1, t_2, t_upper, N_AB, N_ABC, r, mu, mu, mu, mu, mu, mu, n_int_AB, n_int_ABC
+        t_1, t_1, t_1, t_2, t_upper, t_out, N_AB, N_ABC, r, mu, mu, mu, mu, mu, mu, n_int_AB, n_int_ABC
     )
     loglik = forward_loglik(a, b, pi, V)
     write_list([info['Nfeval'], t_1, t_2, t_upper, N_AB, N_ABC, r, loglik, time.time()-info['time']], res_name)
@@ -169,32 +172,33 @@ def optimizer_no_mu(t_1, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, 
     )
 
 def optimization_wrapper_no_mu_t(arg_lst, n_int_AB, n_int_ABC, V, res_name, verbose, info, mu):
-    t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r = arg_lst
+    t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r = arg_lst
     a, b, pi, hidden_names, observed_names = trans_emiss_calc(
-        t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, mu, mu, mu, mu, mu, mu, n_int_AB, n_int_ABC
+        t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu, mu, mu, mu, mu, mu, n_int_AB, n_int_ABC
     )
     loglik = forward_loglik(a, b, pi, V)
     write_list([info['Nfeval'], t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, loglik, time.time()-info['time']], res_name)
     if verbose:
         print(
-            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: .5e}   {7: .5e}   {8: .5e}   {9: 3.6f}   {10: 3.6f}'.format(
+            '{0:4d}   {1: .5e}   {2: .5e}   {3: .5e}   {4: .5e}   {5: .5e}   {6: .5e}   {7: .5e}   {8: .5e}   {9: .5e}   {10: 3.6f}   {11: 3.6f}'.format(
                 info['Nfeval'], 
                 arg_lst[0], arg_lst[1], arg_lst[2], arg_lst[3], 
                 arg_lst[4], arg_lst[5], arg_lst[6], arg_lst[7],
+                arg_lst[8],
                 loglik, time.time()-info['time']
             )
         )
     info['Nfeval'] += 1
     return -loglik
 
-def optimizer_no_mu_t(t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, V, res_name, verbose = False):
-    init_params = np.array([t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r])
-    
+def optimizer_no_mu_t(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu, n_int_AB, n_int_ABC, V, res_name, verbose = False):
+    init_params = np.array([t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r])
     b_t = (1e4, 2e6)
+    b_out = (1e5, 1e7)
     b_N = (1000, 100000)
     b_r = (1e-10, 1e-7)
     # b_mu = (1e-9, 1e-7)
-    bnds = (b_t, b_t, b_t, b_t, b_t, b_t, b_N, b_N, b_r)
+    bnds = (b_t, b_t, b_t, b_t, b_t, b_t, b_out, b_N, b_N, b_r)
     res = minimize(
         optimization_wrapper_no_mu_t, 
         x0 = init_params,
