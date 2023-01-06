@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import expm
 from scipy.special import comb
-from ilsmc.cutpoints import cutpoints_AB, cutpoints_ABC
+from trails.cutpoints import cutpoints_AB, cutpoints_ABC
 from numba import njit
 
 def rate_mat_JC69(mu):

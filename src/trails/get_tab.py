@@ -4,9 +4,9 @@ import multiprocessing as mp
 from ray.util.multiprocessing import Pool
 import os
 from scipy.special import comb
-from ilsmc.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
-from ilsmc.get_times import get_times
-from ilsmc.get_ordered import get_ordered
+from trails.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
+from trails.get_times import get_times
+from trails.get_ordered import get_ordered
 # import time
 
 def precomp(trans_mat, times):

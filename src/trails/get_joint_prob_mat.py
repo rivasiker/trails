@@ -1,10 +1,10 @@
 import numpy as np
 from scipy.linalg import expm
 from ast import literal_eval
-from ilsmc.cutpoints import cutpoints_AB, cutpoints_ABC
-from ilsmc.load_trans_mat import load_trans_mat, trans_mat_num
-from ilsmc.combine_states import combine_states
-from ilsmc.get_tab import get_tab_AB, get_tab_ABC
+from trails.cutpoints import cutpoints_AB, cutpoints_ABC
+from trails.load_trans_mat import load_trans_mat, trans_mat_num
+from trails.combine_states import combine_states
+from trails.get_tab import get_tab_AB, get_tab_ABC
 
 def get_joint_prob_mat(t_A,    t_B,    t_AB,    t_C, 
                       rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 

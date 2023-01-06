@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from ilsmc.get_emission_prob_mat import get_emission_prob_mat
-from ilsmc.get_joint_prob_mat import get_joint_prob_mat
+from trails.get_emission_prob_mat import get_emission_prob_mat
+from trails.get_joint_prob_mat import get_joint_prob_mat
 from scipy.optimize import minimize
 from numba import njit
 import time
