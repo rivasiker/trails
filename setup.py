@@ -4,16 +4,16 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ilsmc-rivasiker",
+    name="trails-rivasiker",
     version="0.0.6",
     author="Iker Rivas-González",
     author_email="irg@birc.au.dk",
-    description="A phylogenetically aware SMC to infer the evolutionary history of species",
+    description="Tree reconstruction of the ancestry using incomplete lineage sorting",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/rivasiker/ilsmc",
+    url="https://github.com/rivasiker/trails",
     project_urls={
-        "Bug Tracker": "https://github.com/rivasiker/ilsmc/issues",
+        "Bug Tracker": "https://github.com/rivasiker/trails/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -23,6 +23,6 @@ setuptools.setup(
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.6",
-    install_requires=['numpy', 'pandas', 'scipy'],
+    install_requires=['numpy', 'pandas', 'scipy', 'ray'],
     include_package_data=True,
 )
