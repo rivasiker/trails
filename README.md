@@ -1,7 +1,7 @@
-# ILSMC: basic example
+# TRAILS: basic example
 
 ```python
-from ilsmc.get_joint_prob_mat import get_joint_prob_mat
+from trails.get_joint_prob_mat import get_joint_prob_mat
 import pandas as pd
 
 arr = get_joint_prob_mat(
