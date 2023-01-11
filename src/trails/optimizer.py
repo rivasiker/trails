@@ -39,7 +39,7 @@ def forward(a, b, pi, V):
 
 @njit
 def backward(a, b, V):
-     """
+    """
     Backward algorithm.
     
     Parameters
@@ -60,7 +60,7 @@ def backward(a, b, V):
 
 
 def post_prob(a, b, pi, V):
-     """
+    """
     Posterior probabilities.
     
     Parameters
@@ -83,7 +83,7 @@ def post_prob(a, b, pi, V):
 
 @njit
 def viterbi(a, b, pi, V):
-     """
+    """
     Viterbi path
     
     Parameters
@@ -119,7 +119,7 @@ def viterbi(a, b, pi, V):
     return S
 
 def write_list(lst, res_name):
-     """
+    """
     This function appends a list to a csv file.
     
     Parameters
