@@ -129,7 +129,7 @@ def write_list(lst, res_name):
     res_name : str
         File name to append to
     """
-    with open('{}.csv'.format(res_name), 'a') as f:
+    with open(f'{res_name}', 'a') as f:
         for i in range(len(lst)):
             f.write(str(lst[i]))
             if i != (len(lst)-1):
@@ -311,6 +311,82 @@ def optimizer_no_mu_t(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu, n_
         optimization_wrapper_no_mu_t, 
         x0 = init_params,
         args = (n_int_AB, n_int_ABC, V, res_name, verbose, {'Nfeval':0, 'time':time.time()}, mu),
+        method = 'Nelder-Mead',
+        bounds = bnds, 
+        options = {
+            'maxiter': 3000,
+            'disp': True
+        }
+    )
+    
+
+def optimization_wrapper(arg_lst, d, V, res_name, info):
+    # Define mutation mode (fixed parameters)
+    if 'mu' in d.keys():
+        mu_A = mu_B = mu_C = mu_D = mu_AB = mu_ABC = d['mu']
+    else:
+        mu_A = d['mu_A']
+        mu_B = d['mu_B']
+        mu_C = d['mu_C']
+        mu_D = d['mu_D']
+        mu_AB = d['mu_AB']
+        mu_ABC = d['mu_ABC']
+    # Define time mode (optimized parameters)
+    if len(arg_lst) == 6:
+        t_1, t_2, t_upper, N_AB, N_ABC, r = arg_lst
+        t_A = t_B = t_C = t_1
+        cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
+        t_out = t_1+t_2+cut_ABC[d['n_int_ABC']-1]+t_upper+2
+    elif len(arg_lst) == 9:
+        t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r = arg_lst
+    # Calculate transition and emission probabilities
+    a, b, pi, hidden_names, observed_names = trans_emiss_calc(
+        t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, 
+        mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC, 
+        d['n_int_AB'], d['n_int_ABC']
+    )
+    # Calculate log-likelihood
+    loglik = forward_loglik(a, b, pi, V)
+    # Write parameter estimates, likelihood and time
+    write_list([info['Nfeval']] + arg_lst.tolist() + [loglik, time.time() - info['time']], res_name)
+    # Update optimization cycle
+    info['Nfeval'] += 1
+    return -loglik
+
+
+def optimizer(optim_params, fixed_params, V, res_name, header = True):
+    """
+    Optimization function. 
+    
+    Parameters
+    ----------
+    optim_params : dictionary
+        Dictionary containing the initial values for the 
+        parameters to be optimized, and their optimization
+        bounds. The structure of the dictionary should be
+        as follows: 
+            dct['variable'] = [initial_value, lower_bound, upper_bound]
+        The dictionary must contain either 6 (t_1, t_2, t_upper, N_AB, N_ABC, r)
+        or 9 (t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r) entries,
+        in that specific order. 
+    fixed params : dictionary
+        Dictionary containing the values for the fixed parameters.
+        The dictionary must contain entries n_int_AB, n_int_ABC, and either
+        mu or mu_A, mu_B, mu_C, mu_D, mu_AB and mu_ABC (in no particular order).
+    V : numpy array
+        Array of integers corresponding to the the observed states.
+    res_name : str
+        Location and name of the gile where the results should be 
+        saved (in csv format).
+    """
+    init_params = np.array([i[0] for i in optim_params.values()])
+    bnds = [(i[1], i[2]) for i in optim_params.values()]
+    if header:
+        write_list(['n_eval'] + list(optim_params.keys()) + ['loglik', 'time'], res_name)
+    res = minimize(
+        optimization_wrapper, 
+        x0 = init_params,
+        args = (fixed_params, V, res_name, {'Nfeval': 0, 'time': time.time()}),
         method = 'Nelder-Mead',
         bounds = bnds, 
         options = {
