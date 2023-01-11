@@ -16,6 +16,20 @@ def forward_loglik(a, b, pi, V):
 
 @njit
 def forward(a, b, pi, V):
+    """
+    Forward algorithm.
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : numpy array
+        Vector of observed states
+    """
     alpha = np.zeros((V.shape[0], a.shape[0]))
     alpha[0, :] = np.log(pi * b[:, V[0]])
     for t in range(1, V.shape[0]):
@@ -25,6 +39,18 @@ def forward(a, b, pi, V):
 
 @njit
 def backward(a, b, V):
+     """
+    Backward algorithm.
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    V : numpy array
+        Vector of observed states
+    """
     beta = np.zeros((V.shape[0], a.shape[0]))
     beta[V.shape[0] - 1] = np.zeros((a.shape[0]))
     for t in range(V.shape[0] - 2, -1, -1):
@@ -34,6 +60,20 @@ def backward(a, b, V):
 
 
 def post_prob(a, b, pi, V):
+     """
+    Posterior probabilities.
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : numpy array
+        Vector of observed states
+    """
     alpha = forward(a, b, pi, V)
     beta = backward(a, b, V)
     post_prob = (alpha+beta)
@@ -43,6 +83,20 @@ def post_prob(a, b, pi, V):
 
 @njit
 def viterbi(a, b, pi, V):
+     """
+    Viterbi path
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : numpy array
+        Vector of observed states
+    """
     T = V.shape[0]
     M = a.shape[0]
     omega = np.zeros((T, M))
@@ -65,6 +119,16 @@ def viterbi(a, b, pi, V):
     return S
 
 def write_list(lst, res_name):
+     """
+    This function appends a list to a csv file.
+    
+    Parameters
+    ----------
+    lst : list
+        List of values to append
+    res_name : str
+        File name to append to
+    """
     with open('{}.csv'.format(res_name), 'a') as f:
         for i in range(len(lst)):
             f.write(str(lst[i]))
@@ -73,6 +137,50 @@ def write_list(lst, res_name):
         f.write('\n')
 
 def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC, n_int_AB, n_int_ABC):
+    """
+    This function calculates the emission and transition probabilities
+    given a certain set of parameters. 
+    
+    Parameters
+    ----------
+    t_A : numeric
+        Time in generations from present to the first speciation event for species A
+    t_B : numeric
+        Time in generations from present to the first speciation event for species B
+    t_C : numeric
+        Time in generations from present to the first speciation event for species C
+    t_2 : numeric
+        Time in generations from the first speciation event to the second speciation event
+    t_upper : numeric
+        Time in generations between the end of the second-to-last interval and the third
+        speciation event
+    t_out : numeric
+        Time in generations from present to the third speciation event for species D, plus
+        the divergence between the ancestor of D and the ancestor of A, B and C at the time
+        of the third speciation event
+    N_AB : numeric
+        Effective population size between speciation events.
+    N_ABC : numeric
+        Effective population size in deep coalescence, before the second speciation event
+    r : numeric
+        Recombination rate per site per generation
+    mu_A : numeric
+        Mutation rate per site per generation for species A
+    mu_B : numeric
+        Mutation rate per site per generation for species B
+    mu_C : numeric
+        Mutation rate per site per generation for species C
+    mu_D : numeric
+        Mutation rate per site per generation for species D
+    mu_AB : numeric
+        Mutation rate per site per generation for species AB
+    mu_ABC : numeric
+        Mutation rate per site per generation for species ABC
+    n_int_AB : integer
+        Number of discretized time intervals between speciation events
+    n_int_ABC : integer
+        Number of discretized time intervals in deep coalescent
+    """
     # Reference Ne (for normalization)
     N_ref = N_ABC
     # Speciation times (in coalescent units, i.e. number of generations / N_ref)
