@@ -14,6 +14,7 @@ src/trails/get_tab.py
 src/trails/get_times.py
 src/trails/load_trans_mat.py
 src/trails/optimizer.py
+src/trails/read_data.py
 src/trails/vanloan.py
 src/trails/data/trans_mat_full_1.csv
 src/trails/data/trans_mat_full_2.csv

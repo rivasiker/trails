@@ -6,18 +6,13 @@ from scipy.optimize import minimize
 from trails.cutpoints import cutpoints_ABC
 from numba import njit
 import time
+from read_data import get_idx_state
 
 
 @njit
 def forward_loglik(a, b, pi, V):
-    alpha = forward(a, b, pi, V)
-    x = alpha[-1, :].max()
-    return np.log(np.exp(alpha[len(V)-1]-x).sum())+x
-
-@njit
-def forward(a, b, pi, V):
     """
-    Forward algorithm.
+    Log-likelihood.
     
     Parameters
     ----------
@@ -28,13 +23,36 @@ def forward(a, b, pi, V):
     pi : numpy array
         Vector of starting probabilities of the hidden states
     V : numpy array
-        Vector of observed states
+        Vector of observed states, as integer indices
+    """
+    alpha = forward(a, b, pi, V)
+    x = alpha[-1, :].max()
+    return np.log(np.exp(alpha[len(V)-1]-x).sum())+x
+
+@njit
+def forward(a, b, pi, V):
+    """
+    Forward algorithm, that allows for missing data.
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : numpy array
+        Vector of observed states, as integer indices
     """
     alpha = np.zeros((V.shape[0], a.shape[0]))
     alpha[0, :] = np.log(pi * b[:, V[0]])
     for t in range(1, V.shape[0]):
         x = alpha[t-1, :].max()
-        alpha[t, :] = np.log((np.exp(alpha[t - 1]-x) @ a) * b[:, V[t]])+x
+        if V[t] < b.shape[1]:
+            alpha[t, :] = np.log((np.exp(alpha[t - 1]-x) @ a) * b[:, V[t]])+x
+        else:
+            alpha[t, :] = np.log((np.exp(alpha[t - 1]-x) @ a) * b[:, get_idx_state(V[t])].sum(axis = 1))+x
     return alpha
 
 @njit
@@ -49,13 +67,16 @@ def backward(a, b, V):
     b : numpy array
         Emission probability matrix
     V : numpy array
-        Vector of observed states
+        Vector of observed states, as integer indices
     """
     beta = np.zeros((V.shape[0], a.shape[0]))
     beta[V.shape[0] - 1] = np.zeros((a.shape[0]))
     for t in range(V.shape[0] - 2, -1, -1):
         x = beta[t+1, :].max()
-        beta[t, :] = np.log((np.exp(beta[t + 1]-x) * b[:, V[t + 1]]) @ a)+x
+        if V[t + 1] < b.shape[1]:
+            beta[t, :] = np.log((np.exp(beta[t + 1]-x) * b[:, V[t + 1]]) @ a)+x
+        else:
+            beta[t, :] = np.log((np.exp(beta[t + 1]-x) * b[:, get_idx_state(V[t+1])]) @ a)+x
     return beta
 
 
@@ -72,7 +93,7 @@ def post_prob(a, b, pi, V):
     pi : numpy array
         Vector of starting probabilities of the hidden states
     V : numpy array
-        Vector of observed states
+        Vector of observed states, as integer indices
     """
     alpha = forward(a, b, pi, V)
     beta = backward(a, b, V)
@@ -345,6 +366,10 @@ def optimization_wrapper(arg_lst, d, V, res_name, info):
         mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC, 
         d['n_int_AB'], d['n_int_ABC']
     )
+    # Save indices for hidden and observed states
+    if info['Nfeval'] == 0:
+        pd.DataFrame({'idx': list(hidden_names.keys()), 'hidden': list(hidden_names.values())}).to_csv('hidden_states.csv', index = False)
+        pd.DataFrame({'idx': list(observed_names.keys()), 'observed': list(observed_names.values())}).to_csv('observed_states.csv', index = False)
     # Calculate log-likelihood
     loglik = forward_loglik(a, b, pi, V)
     # Write parameter estimates, likelihood and time
