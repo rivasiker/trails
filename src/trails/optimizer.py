@@ -357,7 +357,7 @@ def optimization_wrapper(arg_lst, d, V, res_name, info):
         t_1, t_2, t_upper, N_AB, N_ABC, r = arg_lst
         t_A = t_B = t_C = t_1
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
-        t_out = t_1+t_2+cut_ABC[d['n_int_ABC']-1]+t_upper+2*N_ABC
+        t_out = t_1+t_2+cut_ABC[d['n_int_ABC']-1]*N_ABC+t_upper+2*N_ABC
     elif len(arg_lst) == 9:
         t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r = arg_lst
     # Calculate transition and emission probabilities
