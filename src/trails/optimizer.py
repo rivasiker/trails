@@ -342,7 +342,7 @@ def optimizer_no_mu_t(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu, n_
     
 
 def optimization_wrapper(arg_lst, d, V, res_name, info):
-    # Define mutation mode (fixed parameters)
+    # Define mutation model (fixed parameters)
     if 'mu' in d.keys():
         mu_A = mu_B = mu_C = mu_D = mu_AB = mu_ABC = d['mu']
     else:
@@ -352,12 +352,12 @@ def optimization_wrapper(arg_lst, d, V, res_name, info):
         mu_D = d['mu_D']
         mu_AB = d['mu_AB']
         mu_ABC = d['mu_ABC']
-    # Define time mode (optimized parameters)
+    # Define time model (optimized parameters)
     if len(arg_lst) == 6:
         t_1, t_2, t_upper, N_AB, N_ABC, r = arg_lst
         t_A = t_B = t_C = t_1
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
-        t_out = t_1+t_2+cut_ABC[d['n_int_ABC']-1]+t_upper+2
+        t_out = t_1+t_2+cut_ABC[d['n_int_ABC']-1]+t_upper+2*N_ABC
     elif len(arg_lst) == 9:
         t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r = arg_lst
     # Calculate transition and emission probabilities
