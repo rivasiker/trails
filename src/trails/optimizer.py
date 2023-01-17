@@ -6,7 +6,7 @@ from scipy.optimize import minimize
 from trails.cutpoints import cutpoints_ABC
 from numba import njit
 import time
-from read_data import get_idx_state
+from trails.read_data import get_idx_state
 
 
 @njit
