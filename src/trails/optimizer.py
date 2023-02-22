@@ -208,7 +208,7 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu_A, m
     t_A = t_A/N_ref
     t_B = t_B/N_ref
     t_AB = t_2/N_ref
-    t_C = (t_C+t_2)/N_ref
+    t_C = t_C/N_ref
     t_upper = t_upper/N_ref
     t_out = t_out/N_ref
     # Recombination rates (r = rec. rate per site per generation)
@@ -355,7 +355,8 @@ def optimization_wrapper(arg_lst, d, V, res_name, info):
     # Define time model (optimized parameters)
     if len(arg_lst) == 6:
         t_1, t_2, t_upper, N_AB, N_ABC, r = arg_lst
-        t_A = t_B = t_C = t_1
+        t_A = t_B = t_1
+        t_C = t_1 + t_2
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
         t_out = t_1+t_2+cut_ABC[d['n_int_ABC']-1]*N_ABC+t_upper+2*N_ABC
     elif len(arg_lst) == 9:
