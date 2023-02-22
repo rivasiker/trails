@@ -169,7 +169,7 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu_A, m
     t_B : numeric
         Time in generations from present to the first speciation event for species B
     t_C : numeric
-        Time in generations from present to the first speciation event for species C
+        Time in generations from present to the second speciation event for species C
     t_2 : numeric
         Time in generations from the first speciation event to the second speciation event
     t_upper : numeric
