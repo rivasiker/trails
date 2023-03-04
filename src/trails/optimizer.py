@@ -212,11 +212,11 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu_A, m
     t_upper = t_upper/N_ref
     t_out = t_out/N_ref
     # Recombination rates (r = rec. rate per site per generation)
-    rho_A = 2*N_ref*r
-    rho_B = 2*N_ref*r
-    rho_AB = 2*N_ref*r
-    rho_C = 2*N_ref*r
-    rho_ABC = 2*N_ref*r
+    rho_A = N_ref*r
+    rho_B = N_ref*r
+    rho_AB = N_ref*r
+    rho_C = N_ref*r
+    rho_ABC = N_ref*r
     # Coalescent rates
     coal_A = N_ref/N_AB
     coal_B = N_ref/N_AB
@@ -224,12 +224,12 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu_A, m
     coal_C = N_ref/N_AB
     coal_ABC = N_ref/N_ABC
     # Mutation rates (mu = mut. rate per site per generation)
-    mu_A = 2*N_ref*mu_A*(4/3)
-    mu_B = 2*N_ref*mu_B*(4/3)
-    mu_C = 2*N_ref*mu_C*(4/3)
-    mu_D = 2*N_ref*mu_D*(4/3)
-    mu_AB = 2*N_ref*mu_AB*(4/3)
-    mu_ABC = 2*N_ref*mu_ABC*(4/3)
+    mu_A = N_ref*mu_A*(4/3)
+    mu_B = N_ref*mu_B*(4/3)
+    mu_C = N_ref*mu_C*(4/3)
+    mu_D = N_ref*mu_D*(4/3)
+    mu_AB = N_ref*mu_AB*(4/3)
+    mu_ABC = N_ref*mu_ABC*(4/3)
     
     tr = get_joint_prob_mat(
         t_A,    t_B,    t_AB,    t_C, 
