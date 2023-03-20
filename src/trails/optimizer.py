@@ -24,13 +24,14 @@ def loglik_wrapper(a, b, pi, V_lst):
     V : list of numpy arrays
         List of vectors of observed states, as integer indices
     """
+    order = [get_idx_state(i) for i in range(624+1)]
     acc = 0
     for i in V_lst:
-        acc += forward_loglik(a, b, pi, i)
+        acc += forward_loglik(a, b, pi, i, order)
     return acc
 
 @njit
-def forward_loglik(a, b, pi, V):
+def forward_loglik(a, b, pi, V, order):
     """
     Log-likelihood.
     
@@ -45,12 +46,12 @@ def forward_loglik(a, b, pi, V):
     V : numpy array
         Vector of observed states, as integer indices
     """
-    alpha = forward(a, b, pi, V)
+    alpha = forward(a, b, pi, V, order)
     x = alpha[-1, :].max()
     return np.log(np.exp(alpha[len(V)-1]-x).sum())+x
 
 @njit
-def forward(a, b, pi, V):
+def forward(a, b, pi, V, order):
     """
     Forward algorithm, that allows for missing data.
     
@@ -65,7 +66,6 @@ def forward(a, b, pi, V):
     V : numpy array
         Vector of observed states, as integer indices
     """
-    order = [get_idx_state(i) for i in range(624+1)]
     alpha = np.zeros((V.shape[0], a.shape[0]))
     alpha[0, :] = np.log(pi * b[:, order[V[0]]].sum(axis = 1))
     for t in range(1, V.shape[0]):
@@ -74,7 +74,7 @@ def forward(a, b, pi, V):
     return alpha
 
 @njit
-def backward(a, b, V):
+def backward(a, b, V, order):
     """
     Backward algorithm.
     
@@ -87,7 +87,6 @@ def backward(a, b, V):
     V : numpy array
         Vector of observed states, as integer indices
     """
-    order = [get_idx_state(i) for i in range(624+1)]
     beta = np.zeros((V.shape[0], a.shape[0]))
     beta[V.shape[0] - 1] = np.zeros((a.shape[0]))
     for t in range(V.shape[0] - 2, -1, -1):
@@ -96,7 +95,7 @@ def backward(a, b, V):
     return beta
 
 
-def post_prob(a, b, pi, V):
+def post_prob(a, b, pi, V, order):
     """
     Posterior probabilities.
     
@@ -111,8 +110,8 @@ def post_prob(a, b, pi, V):
     V : numpy array
         Vector of observed states, as integer indices
     """
-    alpha = forward(a, b, pi, V)
-    beta = backward(a, b, V)
+    alpha = forward(a, b, pi, V, order)
+    beta = backward(a, b, V, order)
     post_prob = (alpha+beta)
     max_row = post_prob.max(1).reshape(-1, 1)
     post_prob = np.exp(post_prob-max_row)/np.exp(post_prob-max_row).sum(1).reshape(-1, 1)
