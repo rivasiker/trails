@@ -1,5 +1,6 @@
 from numba import njit
 import numpy as np
+from Bio import AlignIO
 
 @njit
 def get_obs_state_dct():
