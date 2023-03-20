@@ -47,7 +47,7 @@ def forward(a, b, pi, V):
     """
     order = [get_idx_state(i) for i in range(624+1)]
     alpha = np.zeros((V.shape[0], a.shape[0]))
-    alpha[0, :] = np.log(pi * b[:, V[0]])
+    alpha[0, :] = np.log(pi * b[:, order[V[0]]].sum(axis = 1))
     for t in range(1, V.shape[0]):
         x = alpha[t-1, :].max()
         alpha[t, :] = np.log((np.exp(alpha[t - 1]-x) @ a) * b[:, order[V[t]]].sum(axis = 1))+x
