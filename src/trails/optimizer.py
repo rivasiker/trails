@@ -9,6 +9,26 @@ import time
 from trails.read_data import get_idx_state
 
 
+def loglik_wrapper(a, b, pi, V_lst):
+    """
+    Log-likelihood wrapper.
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : list of numpy arrays
+        List of vectors of observed states, as integer indices
+    """
+    acc = 0
+    for i in V_lst:
+        acc += forward_loglik(a, b, pi, i)
+    return acc
+
 @njit
 def forward_loglik(a, b, pi, V):
     """
@@ -337,7 +357,7 @@ def optimizer_no_mu_t(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu, n_
     )
     
 
-def optimization_wrapper(arg_lst, d, V, res_name, info):
+def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
     # Define mutation model (fixed parameters)
     if 'mu' in d.keys():
         mu_A = mu_B = mu_C = mu_D = mu_AB = mu_ABC = d['mu']
@@ -368,7 +388,7 @@ def optimization_wrapper(arg_lst, d, V, res_name, info):
         pd.DataFrame({'idx': list(hidden_names.keys()), 'hidden': list(hidden_names.values())}).to_csv('hidden_states.csv', index = False)
         pd.DataFrame({'idx': list(observed_names.keys()), 'observed': list(observed_names.values())}).to_csv('observed_states.csv', index = False)
     # Calculate log-likelihood
-    loglik = forward_loglik(a, b, pi, V)
+    loglik = loglik_wrapper(a, b, pi, V_lst)
     # Write parameter estimates, likelihood and time
     write_list([info['Nfeval']] + arg_lst.tolist() + [loglik, time.time() - info['time']], res_name)
     # Update optimization cycle
@@ -376,7 +396,7 @@ def optimization_wrapper(arg_lst, d, V, res_name, info):
     return -loglik
 
 
-def optimizer(optim_params, fixed_params, V, res_name, header = True):
+def optimizer(optim_params, fixed_params, V_lst, res_name, header = True):
     """
     Optimization function. 
     
@@ -395,8 +415,8 @@ def optimizer(optim_params, fixed_params, V, res_name, header = True):
         Dictionary containing the values for the fixed parameters.
         The dictionary must contain entries n_int_AB, n_int_ABC, and either
         mu or mu_A, mu_B, mu_C, mu_D, mu_AB and mu_ABC (in no particular order).
-    V : numpy array
-        Array of integers corresponding to the the observed states.
+    V_lst : list of numpy arrays
+        List of arrays of integers corresponding to the the observed states.
     res_name : str
         Location and name of the gile where the results should be 
         saved (in csv format).
@@ -408,7 +428,7 @@ def optimizer(optim_params, fixed_params, V, res_name, header = True):
     res = minimize(
         optimization_wrapper, 
         x0 = init_params,
-        args = (fixed_params, V, res_name, {'Nfeval': 0, 'time': time.time()}),
+        args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time()}),
         method = 'Nelder-Mead',
         bounds = bnds, 
         options = {
