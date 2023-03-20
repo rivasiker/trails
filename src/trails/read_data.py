@@ -32,23 +32,14 @@ def get_idx_state(state):
             get_idx_state(lst.index(st[:idx] + 'G' + st[idx+1:])),
         ))
     
-def maf_to_loglik(a, b, pi, file):
-    """
-    This function parses the MAF alignment blocks, computes the log-likelihood
-    of each block given the transition and emission probability matrices,
-    and sums the log-likelihood values of all blocks.
-    
+def maf_parser(file):
+    """    
     Parameters
     ----------
-    a : numpy array
-        Transition probability matrix
-    b : numpy array
-        Emission probability matrix
-    pi : numpy array
-        Vector of starting probabilities of the hidden states
     file : str
         Path to MAF file
     """
+    total_lst = []
     # Start loglik accumulator
     loglik_acc = 0
     # For each block
@@ -58,10 +49,10 @@ def maf_to_loglik(a, b, pi, file):
         for seqrec in multiple_alignment:
             if seqrec.name.split('.')[0] in sp_lst:
                 dct[seqrec.name.split('.')[0]] = str(seqrec.seq).replace('-', 'N')
-        # Convert sequence to index
-        idx_lst = np.zeros((len(seqrec.seq)), dtype = np.int64)
-        for i in range(len(seqrec.seq)):
-            idx_lst[i] = order_st.index(''.join([dct[j][i] for j in sp_lst]).upper())
-        # Compute loglik
-        loglik_acc += forward_loglik(a, b, pi, idx_lst)
-    return loglik_acc
+        if len(dct) == 4: 
+            # Convert sequence to index
+            idx_lst = np.zeros((len(seqrec.seq)), dtype = np.int64)
+            for i in range(len(seqrec.seq)):
+                idx_lst[i] = order_st.index(''.join([dct[j][i] for j in sp_lst]).upper())
+            total_lst.append(idx_lst)
+    return total_lst
