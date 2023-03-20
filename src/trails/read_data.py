@@ -32,12 +32,14 @@ def get_idx_state(state):
             get_idx_state(lst.index(st[:idx] + 'G' + st[idx+1:])),
         ))
     
-def maf_parser(file):
+def maf_parser(file, sp_lst):
     """    
     Parameters
     ----------
     file : str
         Path to MAF file
+    sp_lst : list of str
+        List of length 4 with species names
     """
     total_lst = []
     # Start loglik accumulator
