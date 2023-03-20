@@ -45,14 +45,12 @@ def forward(a, b, pi, V):
     V : numpy array
         Vector of observed states, as integer indices
     """
+    order = [get_idx_state(i) for i in range(624+1)]
     alpha = np.zeros((V.shape[0], a.shape[0]))
     alpha[0, :] = np.log(pi * b[:, V[0]])
     for t in range(1, V.shape[0]):
         x = alpha[t-1, :].max()
-        if V[t] < b.shape[1]:
-            alpha[t, :] = np.log((np.exp(alpha[t - 1]-x) @ a) * b[:, V[t]])+x
-        else:
-            alpha[t, :] = np.log((np.exp(alpha[t - 1]-x) @ a) * b[:, get_idx_state(V[t])].sum(axis = 1))+x
+        alpha[t, :] = np.log((np.exp(alpha[t - 1]-x) @ a) * b[:, order[V[t]]].sum(axis = 1))+x
     return alpha
 
 @njit
@@ -69,14 +67,12 @@ def backward(a, b, V):
     V : numpy array
         Vector of observed states, as integer indices
     """
+    order = [get_idx_state(i) for i in range(624+1)]
     beta = np.zeros((V.shape[0], a.shape[0]))
     beta[V.shape[0] - 1] = np.zeros((a.shape[0]))
     for t in range(V.shape[0] - 2, -1, -1):
         x = beta[t+1, :].max()
-        if V[t + 1] < b.shape[1]:
-            beta[t, :] = np.log((np.exp(beta[t + 1]-x) * b[:, V[t + 1]]) @ a)+x
-        else:
-            beta[t, :] = np.log((np.exp(beta[t + 1]-x) * b[:, get_idx_state(V[t+1])]) @ a)+x
+        beta[t, :] = np.log((np.exp(beta[t + 1]-x) * b[:, order[V[t+1]]].sum(axis = 1)) @ a)+x
     return beta
 
 
