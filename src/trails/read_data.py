@@ -34,7 +34,9 @@ def get_idx_state(state):
     
 def maf_to_loglik(a, b, pi, file):
     """
-    Posterior probabilities.
+    This function parses the MAF alignment blocks, computes the log-likelihood
+    of each block given the transition and emission probability matrices,
+    and sums the log-likelihood values of all blocks.
     
     Parameters
     ----------
