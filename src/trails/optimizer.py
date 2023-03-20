@@ -7,6 +7,7 @@ from trails.cutpoints import cutpoints_ABC
 from numba import njit
 import time
 from trails.read_data import get_idx_state
+from numba.typed import List
 
 
 def loglik_wrapper(a, b, pi, V_lst):
@@ -24,10 +25,18 @@ def loglik_wrapper(a, b, pi, V_lst):
     V : list of numpy arrays
         List of vectors of observed states, as integer indices
     """
-    order = [get_idx_state(i) for i in range(624+1)]
+    order = List()
+    for i in range(624+1):
+        order.append(get_idx_state(i))
     acc = 0
-    for i in V_lst:
-        acc += forward_loglik(a, b, pi, i, order)
+    updates = 0
+    events_count = len(V_lst)
+    for i in range(len(V_lst)):
+        acc += forward_loglik(a, b, pi, V_lst[i], order)
+        finished = 100*(i/events_count)
+        if divmod(finished, 1) == (updates, 0):
+            updates += 1
+            print('{}%'.format(int(finished)), end = '\r')
     return acc
 
 @njit
