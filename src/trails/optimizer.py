@@ -8,6 +8,7 @@ from numba import njit
 import time
 from trails.read_data import get_idx_state
 from numba.typed import List
+import time
 
 
 def loglik_wrapper(a, b, pi, V_lst):
@@ -29,11 +30,13 @@ def loglik_wrapper(a, b, pi, V_lst):
     for i in range(624+1):
         order.append(get_idx_state(i))
     acc = 0
+    prev_time = time.time()
     events_count = len(V_lst)
     for i in range(len(V_lst)):
         acc += forward_loglik(a, b, pi, V_lst[i], order)
-        finished = 100*(i/events_count)
-        print('{}%'.format(finished), end = '\r')
+        if (time.time() - prev_time) > 1:
+            print('{}%'.format(round(100*(i/events_count), 3)), end = '\r')
+            prev_time = time.time()   
     return acc
 
 @njit
