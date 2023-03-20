@@ -29,14 +29,11 @@ def loglik_wrapper(a, b, pi, V_lst):
     for i in range(624+1):
         order.append(get_idx_state(i))
     acc = 0
-    updates = 0
     events_count = len(V_lst)
     for i in range(len(V_lst)):
         acc += forward_loglik(a, b, pi, V_lst[i], order)
         finished = 100*(i/events_count)
-        if divmod(finished, 1) == (updates, 0):
-            updates += 1
-            print('{}%'.format(int(finished)), end = '\r')
+        print('{}%'.format(finished), end = '\r')
     return acc
 
 @njit
