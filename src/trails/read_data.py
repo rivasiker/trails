@@ -42,6 +42,7 @@ def maf_parser(file, sp_lst):
     sp_lst : list of str
         List of length 4 with species names
     """
+    order_st = [get_idx_state(i) for i in range(624+1)]
     total_lst = []
     # Start loglik accumulator
     loglik_acc = 0
