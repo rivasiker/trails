@@ -23,6 +23,6 @@ setuptools.setup(
     package_dir={"": "src"},
     packages=setuptools.find_namespace_packages(where="src"),
     python_requires=">=3.6",
-    install_requires=['numpy', 'pandas', 'scipy', 'ray', 'numba'],
+    install_requires=['numpy', 'pandas', 'scipy', 'ray', 'numba', 'biopython'],
     include_package_data=True,
 )
