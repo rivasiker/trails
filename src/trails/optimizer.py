@@ -404,7 +404,7 @@ def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
     return -loglik
 
 
-def optimizer(optim_params, fixed_params, V_lst, res_name, header = True):
+def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead', header = True):
     """
     Optimization function. 
     
@@ -437,7 +437,7 @@ def optimizer(optim_params, fixed_params, V_lst, res_name, header = True):
         optimization_wrapper, 
         x0 = init_params,
         args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time()}),
-        method = 'Nelder-Mead',
+        method = method,
         bounds = bnds, 
         options = {
             'maxiter': 3000,
