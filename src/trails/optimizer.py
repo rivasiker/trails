@@ -128,7 +128,7 @@ def post_prob(a, b, pi, V, order):
 
 def post_prob_wrapper(a, b, pi, V_lst):
     """
-    Log-likelihood wrapper.
+    Posterior probability wrapper.
     
     Parameters
     ----------
