@@ -416,11 +416,11 @@ def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead
         'maxiter': 3000,
         'disp': True
     }
-    if method in ['L-BFGS-B', 'TNC']:
-        if len(optim_params) == 6:
-            options['eps'] = np.array([10, 1, 10, 1, 1, 1e-9])
-        elif len(optim_params) == 9:
-            options['eps'] = np.array([10, 10, 10, 1, 10, 10, 1, 1, 1e-9])
+    # if method in ['L-BFGS-B', 'TNC']:
+    #     if len(optim_params) == 6:
+    #         options['eps'] = np.array([10, 1, 10, 1, 1, 1e-9])
+    #     elif len(optim_params) == 9:
+    #         options['eps'] = np.array([10, 10, 10, 1, 10, 10, 1, 1, 1e-9])
     res = minimize(
         optimization_wrapper, 
         x0 = init_params,
