@@ -126,6 +126,31 @@ def post_prob(a, b, pi, V, order):
     post_prob = np.exp(post_prob-max_row)/np.exp(post_prob-max_row).sum(1).reshape(-1, 1)
     return post_prob
 
+def post_prob_wrapper(a, b, pi, V_lst):
+    """
+    Log-likelihood wrapper.
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : list of numpy arrays
+        List of vectors of observed states, as integer indices
+    """
+    res_lst = []
+    order = List()
+    for i in range(624+1):
+        order.append(get_idx_state(i))
+    prev_time = time.time()
+    events_count = len(V_lst)
+    for i in range(len(V_lst)):
+        res_lst.append(post_prob(a, b, pi, V_lst[i], order))
+    return res_lst
+
 @njit
 def viterbi(a, b, pi, V):
     """
