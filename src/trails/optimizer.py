@@ -220,10 +220,10 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_A
         Number of discretized time intervals in deep coalescent
     """
     # Speciation times (in coalescent units, i.e. number of generations * mutation rate)
-    t_A = t_1
-    t_B = t_1
+    t_A = t_A
+    t_B = t_B
     t_AB = t_2
-    t_C = (t_1+t_2)
+    t_C = t_C
     t_upper = t_upper
     t_out = t_out
     # Recombination rates (r = rec. rate per site per generation / mutation rate)
