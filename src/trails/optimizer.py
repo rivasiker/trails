@@ -35,7 +35,7 @@ def loglik_wrapper(a, b, pi, V_lst):
     for i in range(len(V_lst)):
         acc += forward_loglik(a, b, pi, V_lst[i], order)
         if (time.time() - prev_time) > 1:
-            print('{}%'.format(round(100*(i/events_count), 3)), end = '\r')
+            # print('{}%'.format(round(100*(i/events_count), 3)), end = '\r')
             prev_time = time.time()   
     return acc
 
@@ -433,15 +433,21 @@ def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead
     bnds = [(i[1], i[2]) for i in optim_params.values()]
     if header:
         write_list(['n_eval'] + list(optim_params.keys()) + ['loglik', 'time'], res_name)
+    options = {
+        'maxiter': 3000,
+        'disp': True
+    }
+    if method in ['L-BFGS-B', 'TNC']:
+        if len(optim_params) == 6:
+            options['eps'] = np.array([10, 1, 10, 1, 1, 1e-9])
+        elif len(optim_params) == 9:
+            options['eps'] = np.array([10, 10, 10, 1, 10, 10, 1, 1, 1e-9])
     res = minimize(
         optimization_wrapper, 
         x0 = init_params,
         args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time()}),
         method = method,
         bounds = bnds, 
-        options = {
-            'maxiter': 3000,
-            'disp': True
-        }
+        options = options
     )
     
