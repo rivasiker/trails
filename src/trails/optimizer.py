@@ -181,7 +181,7 @@ def write_list(lst, res_name):
                 f.write(',')
         f.write('\n')
 
-def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC, n_int_AB, n_int_ABC):
+def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_AB, n_int_ABC):
     """
     This function calculates the emission and transition probabilities
     given a certain set of parameters. 
@@ -190,70 +190,61 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu_A, m
     ----------
     t_A : numeric
         Time in generations from present to the first speciation event for species A
+        (times mutation rate)
     t_B : numeric
         Time in generations from present to the first speciation event for species B
+        (times mutation rate)
     t_C : numeric
         Time in generations from present to the second speciation event for species C
+        (times mutation rate)
     t_2 : numeric
         Time in generations from the first speciation event to the second speciation event
+        (times mutation rate)
     t_upper : numeric
         Time in generations between the end of the second-to-last interval and the third
-        speciation event
+        speciation event (times mutation rate)
     t_out : numeric
         Time in generations from present to the third speciation event for species D, plus
         the divergence between the ancestor of D and the ancestor of A, B and C at the time
-        of the third speciation event
+        of the third speciation event (times mutation rate)
     N_AB : numeric
-        Effective population size between speciation events.
+        Effective population size between speciation events (times mutation rate)
     N_ABC : numeric
         Effective population size in deep coalescence, before the second speciation event
+        (times mutation rate)
     r : numeric
-        Recombination rate per site per generation
-    mu_A : numeric
-        Mutation rate per site per generation for species A
-    mu_B : numeric
-        Mutation rate per site per generation for species B
-    mu_C : numeric
-        Mutation rate per site per generation for species C
-    mu_D : numeric
-        Mutation rate per site per generation for species D
-    mu_AB : numeric
-        Mutation rate per site per generation for species AB
-    mu_ABC : numeric
-        Mutation rate per site per generation for species ABC
+        Recombination rate per site per generation (divided by mutation rate)
     n_int_AB : integer
         Number of discretized time intervals between speciation events
     n_int_ABC : integer
         Number of discretized time intervals in deep coalescent
     """
-    # Reference Ne (for normalization)
-    N_ref = N_ABC
-    # Speciation times (in coalescent units, i.e. number of generations / N_ref)
-    t_A = t_A/N_ref
-    t_B = t_B/N_ref
-    t_AB = t_2/N_ref
-    t_C = t_C/N_ref
-    t_upper = t_upper/N_ref
-    t_out = t_out/N_ref
-    # Recombination rates (r = rec. rate per site per generation)
-    rho_A = N_ref*r
-    rho_B = N_ref*r
-    rho_AB = N_ref*r
-    rho_C = N_ref*r
-    rho_ABC = N_ref*r
-    # Coalescent rates
-    coal_A = N_ref/N_AB
-    coal_B = N_ref/N_AB
-    coal_AB = N_ref/N_AB
-    coal_C = N_ref/N_AB
-    coal_ABC = N_ref/N_ABC
-    # Mutation rates (mu = mut. rate per site per generation)
-    mu_A = N_ref*mu_A*(4/3)
-    mu_B = N_ref*mu_B*(4/3)
-    mu_C = N_ref*mu_C*(4/3)
-    mu_D = N_ref*mu_D*(4/3)
-    mu_AB = N_ref*mu_AB*(4/3)
-    mu_ABC = N_ref*mu_ABC*(4/3)
+    # Speciation times (in coalescent units, i.e. number of generations * mutation rate)
+    t_A = t_1
+    t_B = t_1
+    t_AB = t_2
+    t_C = (t_1+t_2)
+    t_upper = t_upper
+    t_out = t_out
+    # Recombination rates (r = rec. rate per site per generation / mutation rate)
+    rho_A = r
+    rho_B = r
+    rho_AB = r
+    rho_C = r
+    rho_ABC = r
+    # Coalescent rates (1 / (Ne * mutation rate))
+    coal_A = 1/N_AB
+    coal_B = 1/N_AB
+    coal_AB = 1/N_AB
+    coal_C = 1/N_AB
+    coal_ABC = 1/N_ABC
+    # Mutation rates (mu = mutation rate / mutation rate = 1, rescaled for JC by 4/3)
+    mu_A = (4/3)
+    mu_B = (4/3)
+    mu_C = (4/3)
+    mu_D = (4/3)
+    mu_AB = (4/3)
+    mu_ABC = (4/3)
     
     tr = get_joint_prob_mat(
         t_A,    t_B,    t_AB,    t_C, 
@@ -366,16 +357,6 @@ def optimizer_no_mu_t(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, mu, n_
     
 
 def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
-    # Define mutation model (fixed parameters)
-    if 'mu' in d.keys():
-        mu_A = mu_B = mu_C = mu_D = mu_AB = mu_ABC = d['mu']
-    else:
-        mu_A = d['mu_A']
-        mu_B = d['mu_B']
-        mu_C = d['mu_C']
-        mu_D = d['mu_D']
-        mu_AB = d['mu_AB']
-        mu_ABC = d['mu_ABC']
     # Define time model (optimized parameters)
     if len(arg_lst) == 6:
         t_1, t_2, t_upper, N_AB, N_ABC, r = arg_lst
@@ -388,7 +369,6 @@ def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
     # Calculate transition and emission probabilities
     a, b, pi, hidden_names, observed_names = trans_emiss_calc(
         t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, 
-        mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC, 
         d['n_int_AB'], d['n_int_ABC']
     )
     # Save indices for hidden and observed states
@@ -421,8 +401,7 @@ def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead
         in that specific order. 
     fixed params : dictionary
         Dictionary containing the values for the fixed parameters.
-        The dictionary must contain entries n_int_AB, n_int_ABC, and either
-        mu or mu_A, mu_B, mu_C, mu_D, mu_AB and mu_ABC (in no particular order).
+        The dictionary must contain entries n_int_AB and n_int_ABC (in no particular order).
     V_lst : list of numpy arrays
         List of arrays of integers corresponding to the the observed states.
     res_name : str
