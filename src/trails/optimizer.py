@@ -244,32 +244,34 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_A
     n_int_ABC : integer
         Number of discretized time intervals in deep coalescent
     """
-    # Speciation times (in coalescent units, i.e. number of generations * mutation rate)
-    t_A = t_A
-    t_B = t_B
-    t_AB = t_2
-    t_C = t_C
-    t_upper = t_upper
-    t_out = t_out
-    # Recombination rates (r = rec. rate per site per generation / mutation rate)
-    rho_A = r
-    rho_B = r
-    rho_AB = r
-    rho_C = r
-    rho_ABC = r
-    # Coalescent rates (1 / (Ne * mutation rate))
-    coal_A = 1/N_AB
-    coal_B = 1/N_AB
-    coal_AB = 1/N_AB
-    coal_C = 1/N_AB
-    coal_ABC = 1/N_ABC
-    # Mutation rates (mu = mutation rate / mutation rate = 1, rescaled for JC by 4/3)
-    mu_A = (4/3)
-    mu_B = (4/3)
-    mu_C = (4/3)
-    mu_D = (4/3)
-    mu_AB = (4/3)
-    mu_ABC = (4/3)
+    # Reference Ne (for normalization)
+    N_ref = N_ABC
+    # Speciation times (in coalescent units, i.e. number of generations / N_ref)
+    t_A = t_A/N_ref
+    t_B = t_B/N_ref
+    t_AB = t_2/N_ref
+    t_C = t_C/N_ref
+    t_upper = t_upper/N_ref
+    t_out = t_out/N_ref
+    # Recombination rates (r = rec. rate per site per generation)
+    rho_A = N_ref*r
+    rho_B = N_ref*r
+    rho_AB = N_ref*r
+    rho_C = N_ref*r
+    rho_ABC = N_ref*r
+    # Coalescent rates
+    coal_A = N_ref/N_AB
+    coal_B = N_ref/N_AB
+    coal_AB = N_ref/N_AB
+    coal_C = N_ref/N_AB
+    coal_ABC = N_ref/N_ABC
+    # Mutation rates (mu = mut. rate per site per generation)
+    mu_A = N_ref*(4/3)
+    mu_B = N_ref*(4/3)
+    mu_C = N_ref*(4/3)
+    mu_D = N_ref*(4/3)
+    mu_AB = N_ref*(4/3)
+    mu_ABC = N_ref*(4/3)
     
     tr = get_joint_prob_mat(
         t_A,    t_B,    t_AB,    t_C, 
