@@ -206,7 +206,8 @@ def write_list(lst, res_name):
                 f.write(',')
         f.write('\n')
 
-def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_AB, n_int_ABC):
+def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_AB, n_int_ABC,
+                     cut_AB = 'standard', cut_ABC = 'standard'):
     """
     This function calculates the emission and transition probabilities
     given a certain set of parameters. 
@@ -277,7 +278,9 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_A
         t_A,    t_B,    t_AB,    t_C, 
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
         coal_A, coal_B, coal_AB, coal_C, coal_ABC,
-        n_int_AB, n_int_ABC)
+        n_int_AB, n_int_ABC,
+        cut_AB, cut_ABC
+    )
     tr = pd.DataFrame(tr, columns=['From', 'To', 'Prob']).pivot(index = ['From'], columns = ['To'], values = ['Prob'])
     tr.columns = tr.columns.droplevel()
     hidden_names = list(tr.columns)
@@ -291,7 +294,9 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_A
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
         coal_A, coal_B, coal_AB, coal_C, coal_ABC,
         n_int_AB, n_int_ABC,
-        mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC)
+        mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC,
+        cut_AB, cut_ABC
+    )
     em.hidden_state = em.hidden_state.astype("category")
     em.hidden_state.cat.set_categories(hidden_names)
     em = em.sort_values(["hidden_state"])
