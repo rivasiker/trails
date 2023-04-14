@@ -9,7 +9,8 @@ from trails.get_tab import get_tab_AB, get_tab_ABC
 def get_joint_prob_mat(t_A,    t_B,    t_AB,    t_C, 
                       rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
                       coal_A, coal_B, coal_AB, coal_C, coal_ABC,
-                      n_int_AB, n_int_ABC):
+                      n_int_AB, n_int_ABC,
+                      cut_AB = 'standard', cut_ABC = 'standard'):
     
     """
     This is a wrapper function that unifies all the CTMCs to 
