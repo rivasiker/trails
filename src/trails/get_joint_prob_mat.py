@@ -110,7 +110,8 @@ def get_joint_prob_mat(t_A,    t_B,    t_AB,    t_C,
     #########################
     
     # Calculate cutpoints
-    cut_AB = cutpoints_AB(n_int_AB, t_AB, coal_AB)
+    if cut_AB == 'standard':
+        cut_AB = cutpoints_AB(n_int_AB, t_AB, coal_AB)
     # Convert string transition rate matrix to numeric matrix
     # This is a (15x15) matrix
     trans_mat_AB = trans_mat_num(trans_mat_2, coal_AB, rho_AB)
@@ -146,7 +147,8 @@ def get_joint_prob_mat(t_A,    t_B,    t_AB,    t_C,
     ###########################
     
     # Calculate cutpoints
-    cut_ABC = cutpoints_ABC(n_int_ABC, coal_ABC)
+    if cut_ABC == 'standard':
+        cut_ABC = cutpoints_ABC(n_int_ABC, coal_ABC)
     # Convert string transition rate matrix to numeric matrix
     # This is a (31x31) matrix
     trans_mat_ABC = trans_mat_num(trans_mat_3, coal_ABC, rho_ABC)
