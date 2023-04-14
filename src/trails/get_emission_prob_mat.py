@@ -589,7 +589,8 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,
                           rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
                           coal_A, coal_B, coal_AB, coal_C, coal_ABC,
                           n_int_AB, n_int_ABC,
-                          mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC):
+                          mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC,
+                          cut_AB = 'standard', cut_ABC = 'standard'):
     """
     This function returns the emission probabilities of all hidden states
     given a set of population genetics parameters. 
@@ -626,8 +627,10 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,
         Mutation rate for the A, B, C, D, AB and ABC intervals.
     """
     n_markov_states = n_int_AB*n_int_ABC+n_int_ABC*3+3*comb(n_int_ABC, 2, exact = True)
-    cut_AB = cutpoints_AB(n_int_AB, t_AB, coal_AB)
-    cut_ABC = cutpoints_ABC(n_int_ABC, coal_ABC)
+    if cut_AB == 'standard':
+        cut_AB = cutpoints_AB(n_int_AB, t_AB, coal_AB)
+    if cut_ABC == 'standard':
+        cut_ABC = cutpoints_ABC(n_int_ABC, coal_ABC)
     probs = np.empty((n_markov_states), dtype=object)
     states = np.empty((n_markov_states), dtype=object)
     
