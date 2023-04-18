@@ -314,9 +314,13 @@ def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
         t_A = t_B = t_1
         t_C = t_1 + t_2
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
-        t_out = t_1+t_2+cut_ABC[d['n_int_ABC']-1]*N_ABC+t_upper+2*N_ABC
+        t_out = t_1 + t_2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
     elif len(arg_lst) == 9:
         t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r = arg_lst
+    elif len(arg_lst) == 8:
+        t_A, t_B, t_C, t_2, t_upper, N_AB, N_ABC, r = arg_lst
+        cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
+        t_out = (((t_A+t_B)/2+t_2)+t_C)/2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
     # Calculate transition and emission probabilities
     a, b, pi, hidden_names, observed_names = trans_emiss_calc(
         t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, 
