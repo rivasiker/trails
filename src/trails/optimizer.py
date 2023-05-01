@@ -8,9 +8,9 @@ from numba import njit
 import time
 from trails.read_data import get_idx_state
 from numba.typed import List
-import time
 from ray.util.multiprocessing import Pool
 import multiprocessing as mp
+import os
 
 
 def loglik_wrapper_par(a, b, pi, V_lst):
