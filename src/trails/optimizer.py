@@ -13,9 +13,27 @@ import multiprocessing as mp
 import os
 
 
+def forward_loglik_par(a, b, pi, V, order):
+    """
+    Log-likelihood (parallelized)
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : numpy array
+        Vector of observed states, as integer indices
+    """
+    order = List(order)
+    return forward_loglik(a, b, pi, V, order)
+
 def loglik_wrapper_par(a, b, pi, V_lst):
     """
-    Log-likelihood wrapper.
+    Log-likelihood wrapper (parallelized)
     
     Parameters
     ----------
@@ -28,7 +46,7 @@ def loglik_wrapper_par(a, b, pi, V_lst):
     V : list of numpy arrays
         List of vectors of observed states, as integer indices
     """
-    order = List()
+    order = list()
     for i in range(624+1):
         order.append(get_idx_state(i))
     pool_lst = []
@@ -39,12 +57,11 @@ def loglik_wrapper_par(a, b, pi, V_lst):
     except KeyError:
         ncpus = mp.cpu_count()
     pool = Pool(ncpus)
-    res = pool.starmap_async(forward_loglik, pool_lst)
+    res = pool.starmap_async(forward_loglik_par, pool_lst)
     acc = 0
-    for i in res:
+    for i in res.get():
         acc += i
     return acc
-
 
 def loglik_wrapper(a, b, pi, V_lst):
     """
@@ -366,7 +383,10 @@ def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
         pd.DataFrame({'idx': list(hidden_names.keys()), 'hidden': list(hidden_names.values())}).to_csv('hidden_states.csv', index = False)
         pd.DataFrame({'idx': list(observed_names.keys()), 'observed': list(observed_names.values())}).to_csv('observed_states.csv', index = False)
     # Calculate log-likelihood
-    loglik = loglik_wrapper(a, b, pi, V_lst)
+    if len(V_lst) >= 500:
+        loglik = loglik_wrapper_par(a, b, pi, V_lst)
+    else:
+        loglik = loglik_wrapper(a, b, pi, V_lst)
     # Write parameter estimates, likelihood and time
     write_list([info['Nfeval']] + arg_lst.tolist() + [loglik, time.time() - info['time']], res_name)
     # Update optimization cycle
