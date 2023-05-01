@@ -9,6 +9,41 @@ import time
 from trails.read_data import get_idx_state
 from numba.typed import List
 import time
+from ray.util.multiprocessing import Pool
+import multiprocessing as mp
+
+
+def loglik_wrapper_par(a, b, pi, V_lst):
+    """
+    Log-likelihood wrapper.
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : list of numpy arrays
+        List of vectors of observed states, as integer indices
+    """
+    order = List()
+    for i in range(624+1):
+        order.append(get_idx_state(i))
+    pool_lst = []
+    for i in range(len(V_lst)):
+        pool_lst.append((a, b, pi, V_lst[i], order))
+    try:
+        ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+    except KeyError:
+        ncpus = mp.cpu_count()
+    pool = Pool(ncpus)
+    res = pool.starmap_async(forward_loglik, pool_lst)
+    acc = 0
+    for i in res:
+        acc += i
+    return acc
 
 
 def loglik_wrapper(a, b, pi, V_lst):
