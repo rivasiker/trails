@@ -3,3 +3,4 @@ pandas
 scipy
 ray
 numba
+biopython

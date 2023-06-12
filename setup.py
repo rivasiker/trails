@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="Iker Rivas-González",
     author_email="irg@birc.au.dk",
-    description="Tree reconstruction of the ancestry using incomplete lineage sorting",
+    description="Tree reconstruction of ancestry using incomplete lineage sorting",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/rivasiker/trails",
