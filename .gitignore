@@ -1,2 +1,4 @@
 .conda/
 .ipynb_checkpoints/
+src/trails/__pycache__/
+src/trails/__pycache__/optimizer.cpython-37.pyc

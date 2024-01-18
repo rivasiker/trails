@@ -140,7 +140,7 @@ def get_joint_prob_mat_introgression(
     # This is when at least one of either the left or the right sites are missing a B lineage
 
     # This is the transition matrix and state space for when lineages are missing
-    (trans_mat_2_miss, state_space_2_miss) = load_trans_mat_miss(2)
+    (trans_mat_2_miss, state_space_2_miss) = load_trans_mat_miss()
     state_space_BC_miss = [literal_eval(i) for i in state_space_2_miss]
     trans_mat_BC_miss = trans_mat_num(trans_mat_2_miss, coal_AB, rho_AB)
     # Combine the state space of the migrated B lineages with the state space of C
@@ -167,8 +167,9 @@ def get_joint_prob_mat_introgression(
     # # Missing lineages # #
     # This is when at least one of either the left or the right sites are missing a B lineage
 
-    # This is the transition matrix and state space for when lineages are missing
-    (trans_mat_4, state_space_4) = load_trans_mat_miss(2)
+    # This is the transition matrix and state space for when lineages are missing.
+    # It is the same as for the right path, but with A instead of C.
+    (trans_mat_4, state_space_4) = load_trans_mat_miss()
     trans_mat_AB_miss = trans_mat_num(trans_mat_4, coal_AB, rho_AB)
     state_space_4 = [i.replace('4', '1') for i in state_space_4]
     state_space_4 = [i.replace('6', '3') for i in state_space_4]
@@ -223,7 +224,10 @@ def split_migration(state_space, prob_vec, m, direction):
     direction : string
         Left or right path
     """
+    # Pr(O--  --O) = 1 - Pr(O--O)
     x = prob_vec[1]
+    # Define new state space
+    #         O--O          O--    --O           O--                    --O
     st = [state_space[0], state_space[1], [state_space[1][0]], [state_space[1][1]]]
     if direction == 'left':
         pr = np.array([(1-x)*(1-m), (1-m)**2*x, 1/2*(1-m)*m*x, 1/2*(1-m)*m*x])
@@ -232,33 +236,37 @@ def split_migration(state_space, prob_vec, m, direction):
     return (st, pr)
 
 
-def load_trans_mat_miss(i):
-    if i == 2:
-        mat = np.array(
-            [
-                ['0', 'R', '0', '0', 'C', '0', '0', '0', '0', '0'],
-                ['C', '0', 'C', 'C', '0', '0', '0', '0', '0', '0'],
-                ['0', 'R', '0', '0', 'C', '0', '0', '0', '0', '0'],
-                ['0', '0', '0', '0', 'C', '0', '0', '0', '0', '0'],
-                ['0', '0', '0', 'R', '0', '0', '0', '0', '0', '0'],
-                ['0', '0', '0', '0', '0', '0', 'R', '0', '0', 'C'],
-                ['0', '0', '0', '0', '0', 'C', '0', 'C', 'C', '0'],
-                ['0', '0', '0', '0', '0', '0', 'R', '0', '0', 'C'],
-                ['0', '0', '0', '0', '0', '0', '0', '0', '0', 'C'],
-                ['0', '0', '0', '0', '0', '0', '0', '0', 'R', '0']
-            ], 
-            dtype=object)
-        st = [
-            '[(2, 0), (4, 4)]', 
-            '[(0, 4), (2, 0), (4, 0)]', 
-            '[(2, 4), (4, 0)]', 
-            '[(0, 4), (6, 0)]',
-            '[(6, 4)]',
-            '[(0, 2), (4, 4)]', 
-            '[(0, 2), (0, 4), (4, 0)]', 
-            '[(0, 4), (4, 2)]', 
-            '[(0, 6), (4, 0)]',
-            '[(4, 6)]']
+def load_trans_mat_miss():
+    """
+    This function defines the state space and transition rate matrix for
+    the right path when lineages are missing, i.e., when only the right
+    or the left site of species B are mixed with the two sites of species C.  
+    """
+    mat = np.array(
+        [
+            ['0', 'R', '0', '0', 'C', '0', '0', '0', '0', '0'],
+            ['C', '0', 'C', 'C', '0', '0', '0', '0', '0', '0'],
+            ['0', 'R', '0', '0', 'C', '0', '0', '0', '0', '0'],
+            ['0', '0', '0', '0', 'C', '0', '0', '0', '0', '0'],
+            ['0', '0', '0', 'R', '0', '0', '0', '0', '0', '0'],
+            ['0', '0', '0', '0', '0', '0', 'R', '0', '0', 'C'],
+            ['0', '0', '0', '0', '0', 'C', '0', 'C', 'C', '0'],
+            ['0', '0', '0', '0', '0', '0', 'R', '0', '0', 'C'],
+            ['0', '0', '0', '0', '0', '0', '0', '0', '0', 'C'],
+            ['0', '0', '0', '0', '0', '0', '0', '0', 'R', '0']
+        ], 
+        dtype=object)
+    st = [
+        '[(2, 0), (4, 4)]', 
+        '[(0, 4), (2, 0), (4, 0)]', 
+        '[(2, 4), (4, 0)]', 
+        '[(0, 4), (6, 0)]',
+        '[(6, 4)]',
+        '[(0, 2), (4, 4)]', 
+        '[(0, 2), (0, 4), (4, 0)]', 
+        '[(0, 4), (4, 2)]', 
+        '[(0, 6), (4, 0)]',
+        '[(4, 6)]']
     return (mat, st)
 
 def mix_probs(
@@ -266,11 +274,38 @@ def mix_probs(
         state_space_ABC, 
         final_AB_miss, final_BC_miss, final_AB_full, final_BC_full, final_A_bis, final_C_bis
         ):
-    
-    # Combine probabilities
+    """
+    This function mixes the probabilities of all CTMCs when reaching 
+    the second speciation event to get the starting probabilities
+    of the three-sequence CTMC in deep time. 
 
+    Parameters
+    ----------
+    state_space_* : list of lists of tuples
+        The state space for...
+            *AB_miss (the left path when one B lineage is missing)
+            *BC_miss (the right path when one B lineage is missing)
+            *AB (the right path when no B lineages are missing)
+            *BC (the left path when no B lineages are missing)
+            *A (the one-sequence CTMC for A) 
+            *C (the one-sequence CTMC for C)
+            *ABC (the three-sequence CTMC deep in time)
+    final_* : list of floats
+        The final probabilities for...
+            *AB_miss (the left path when one B lineage is missing)
+            *BC_miss (the right path when one B lineage is missing)
+            *AB_full (the right path when no B lineages are missing)
+            *BC_full (the left path when no B lineages are missing)
+            *A_bis (the one-sequence CTMC for A, from present to second speciatione event)
+            *C_bis (the one-sequence CTMC for C, from present to second speciatione event)
+            
+    """
+    
+    # Define empty lists
     lst_a = []
     lst_b = []
+
+    # Mix probabilities for all possible combinations
 
     (a, b) = combine_states(
         state_space_AB_miss[5::], state_space_BC_miss[0:5], 
@@ -304,7 +339,7 @@ def mix_probs(
     lst_a = lst_a+a
     lst_b = lst_b+b
 
-    # Sum probabilities for the same state
+    # Sum probabilities for the same state across combinations
 
     dct = {}
     for i in range(len(lst_a)):
@@ -313,13 +348,26 @@ def mix_probs(
         else:
             dct[lst_a[i]] += lst_b[i]
 
-    # Get omegas
+    # Get ordered final probabilities
 
     ordered_pi_ABC = [list(dct.values())[list(dct.keys()).index(str(i))] if str(i) in list(dct.keys()) else 0 for i in state_space_ABC]
 
     return ordered_pi_ABC
 
 def divide_starting_probs(ordered_pi_ABC, state_space_ABC):
+    """
+    This function divides the starting probabilities of the three-sequence
+    CTMC according to the path taken, i.e., it identifies the states where sequences 
+    have already coalesced at the left and/or the right sites, and it divides
+    their starting probabilities based on this.  
+
+    Parameters
+    ----------
+    ordered_pi_ABC : list of floats
+        The starting probabilities of the three-sequence CTMC
+    state_space_ABC : list of lists of tuples
+        The ordered state space of the three-sequence CTMC
+    """
 
     # Obtain all of the omegas
     om = {}
@@ -350,46 +398,47 @@ def divide_starting_probs(ordered_pi_ABC, state_space_ABC):
     # Create accumulator for keeping track of the indices for the table
     acc = 0
 
+    # Uncoalesced states (destined for deep coalesce at both sites)
     tab_names.append(('D', 'D')) 
     tmp_lst = om['00']
     tab[acc] = [ordered_pi_ABC[i] if i in tmp_lst else 0 for i in range(len(state_space_ABC))]
     acc += 1
-
+    # Introgression states (already coalesced at both sites through right path)
     tab_names.append(((4, 0), (4, 0))) 
     tmp_lst = om['66']
     tab[acc] = [ordered_pi_ABC[i] if i in tmp_lst else 0 for i in range(len(state_space_ABC))]
     acc += 1
-
+    # Shallow coalescence states (already coalesced at both sites through left path)
     tab_names.append(((0, 0), (0, 0))) 
     tmp_lst = om['33']
     tab[acc] = [ordered_pi_ABC[i] if i in tmp_lst else 0 for i in range(len(state_space_ABC))]
     acc += 1
-
+    # Uncoalesced on left site, introgressed on right site
     tab_names.append(('D', (4, 0)))
     tmp_lst = om['06']
     tab[acc] = [ordered_pi_ABC[i] if i in tmp_lst else 0 for i in range(len(state_space_ABC))]
     acc += 1
-
+    # Introgressed on left site, uncoalesced on right site
     tab_names.append(((4, 0), 'D'))
     tmp_lst = om['60']
     tab[acc] = [ordered_pi_ABC[i] if i in tmp_lst else 0 for i in range(len(state_space_ABC))]
     acc += 1
-
+    # Uncoalesced on left site, shallow coalescence on right site
     tab_names.append(('D', (0, 0)))
     tmp_lst = om['03']
     tab[acc] = [ordered_pi_ABC[i] if i in tmp_lst else 0 for i in range(len(state_space_ABC))]
     acc += 1
-
+    # Shallow coalescence on left site, uncoalesced on right site
     tab_names.append(((0, 0), 'D'))
     tmp_lst = om['30']
     tab[acc] = [ordered_pi_ABC[i] if i in tmp_lst else 0 for i in range(len(state_space_ABC))]
     acc += 1
-
+    # Introgressed on left site, uncoalesced on right site
     tab_names.append(((4, 0), (0, 0)))
     tmp_lst = om['63']
     tab[acc] = [ordered_pi_ABC[i] if i in tmp_lst else 0 for i in range(len(state_space_ABC))]
     acc += 1
-
+    # Uncoalesced on left site, introgressed on right site
     tab_names.append(((0, 0), (4, 0)))
     tmp_lst = om['36']
     tab[acc] = [ordered_pi_ABC[i] if i in tmp_lst else 0 for i in range(len(state_space_ABC))]
