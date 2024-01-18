@@ -581,6 +581,11 @@ def init_worker_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC):
     
 
 def pool_ABC(l, L, r, R):
+    # If shared_data is not defined, import it from get_tab_introgression.py
+    try:
+        shared_data
+    except NameError:
+        from trails.get_tab_introgression import shared_data
     pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC = shared_data
     tab = []
     # starttim =  time.time()
