@@ -580,7 +580,7 @@ def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
     info['Nfeval'] += 1
     return -loglik
     
-def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead', header = True):
+def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method = 'COBYLA', header = True):
     """
     Optimization function. 
     
@@ -592,8 +592,9 @@ def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method 
         bounds. The structure of the dictionary should be
         as follows: 
             dct['variable'] = [initial_value, lower_bound, upper_bound]
-        The dictionary must contain either 6 (t_1, t_2, t_upper, t_m, N_AB, N_ABC, r, m)
-        or 9 (t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_ABC, r, m) entries,
+        The dictionary must contain either 8 (t_1, t_2, t_upper, t_m, N_AB, N_ABC, r, m),
+        10 (t_A, t_B, t_C, t_2, t_upper, t_m, N_AB, N_ABC, r, m),
+        or 11 (t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_ABC, r, m) entries,
         in that specific order. 
     fixed params : dictionary
         Dictionary containing the values for the fixed parameters.
@@ -612,17 +613,20 @@ def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method 
         'maxiter': 3000,
         'disp': True
     }
-    # if method in ['L-BFGS-B', 'TNC']:
-    #     if len(optim_params) == 6:
-    #         options['eps'] = np.array([10, 1, 10, 1, 1, 1e-9])
-    #     elif len(optim_params) == 9:
-    #         options['eps'] = np.array([10, 10, 10, 1, 10, 10, 1, 1, 1e-9])
+    if len(optim_params) == 8:
+        cons = {'type':'ineq','fun': lambda x: np.array([x[0]-x[3]])}
+    elif len(optim_params) == 11:
+        cons = {'type':'ineq','fun': lambda x: np.array([x[1]-x[6], x[2]-x[3]-x[6]])}
+    elif len(optim_params) == 10:
+        cons = {'type':'ineq','fun': lambda x: np.array([x[1]-x[5], x[2]-x[3]-x[5]])}
+        
     res = minimize(
         optimization_wrapper_introgression, 
         x0 = init_params,
         args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time()}),
         method = method,
         bounds = bnds, 
+        constraints = cons,
         options = options
     )
     
