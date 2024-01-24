@@ -580,7 +580,7 @@ def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
     info['Nfeval'] += 1
     return -loglik
     
-def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method = 'COBYLA', header = True):
+def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead', header = True):
     """
     Optimization function. 
     
@@ -613,12 +613,6 @@ def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method 
         'maxiter': 3000,
         'disp': True
     }
-    if len(optim_params) == 8:
-        cons = {'type':'ineq','fun': lambda x: np.array([x[0]-x[3]])}
-    elif len(optim_params) == 11:
-        cons = {'type':'ineq','fun': lambda x: np.array([x[1]-x[6], x[2]-x[3]-x[6]])}
-    elif len(optim_params) == 10:
-        cons = {'type':'ineq','fun': lambda x: np.array([x[1]-x[5], x[2]-x[3]-x[5]])}
         
     res = minimize(
         optimization_wrapper_introgression, 
@@ -626,7 +620,6 @@ def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method 
         args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time()}),
         method = method,
         bounds = bnds, 
-        constraints = cons,
         options = options
     )
     

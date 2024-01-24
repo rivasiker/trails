@@ -12,12 +12,6 @@ Classifier: Operating System :: OS Independent
 Requires-Python: >=3.6
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: numpy
-Requires-Dist: pandas
-Requires-Dist: scipy
-Requires-Dist: ray
-Requires-Dist: numba
-Requires-Dist: biopython
 
 # TRAILS
 
