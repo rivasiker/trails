@@ -789,7 +789,7 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,
 def get_emission_prob_mat_introgression(
         t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,   t_m,
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
-        coal_A, coal_B, coal_AB, coal_C, coal_ABC,
+        coal_A, coal_B, coal_AB, coal_BC, coal_C, coal_ABC,
         n_int_AB, n_int_ABC,
         mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC,
         cut_AB = 'standard', cut_ABC = 'standard'):
