@@ -361,7 +361,7 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_A
     return a, b, pi, hidden_names, observed_names
 
 def trans_emiss_calc_introgression(
-        t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_ABC, r, m, n_int_AB, n_int_ABC,
+        t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m, n_int_AB, n_int_ABC,
         cut_AB = 'standard', cut_ABC = 'standard'):
     """
     This function calculates the emission and transition probabilities
@@ -388,13 +388,19 @@ def trans_emiss_calc_introgression(
         Time in generations from present to the third speciation event for species D, plus
         the divergence between the ancestor of D and the ancestor of A, B and C at the time
         of the third speciation event (times mutation rate)
+    t_m : numeric
+        Time in generagions from admixture time until first speciation time
     N_AB : numeric
-        Effective population size between speciation events (times mutation rate)
+        Effective population size between speciation events (times mutation rate) for AB
+    N_BC : numeric
+        Effective population size between speciation events (times mutation rate) for BC
     N_ABC : numeric
         Effective population size in deep coalescence, before the second speciation event
         (times mutation rate)
     r : numeric
         Recombination rate per site per generation (divided by mutation rate)
+    m : numeric
+        Migration rate (admixture proportion)
     n_int_AB : integer
         Number of discretized time intervals between speciation events
     n_int_ABC : integer
@@ -424,7 +430,8 @@ def trans_emiss_calc_introgression(
     coal_A = N_ref/N_AB
     coal_B = N_ref/N_AB
     coal_AB = N_ref/N_AB
-    coal_C = N_ref/N_AB
+    coal_BC = N_ref/N_BC
+    coal_C = N_ref/N_BC
     coal_ABC = N_ref/N_ABC
     # Mutation rates (mu = mut. rate per site per generation)
     mu_A = N_ref*(4/3)
@@ -437,7 +444,7 @@ def trans_emiss_calc_introgression(
     tr = get_joint_prob_mat_introgression(
         t_A,    t_B,    t_AB,    t_C,    t_m,
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
-        coal_A, coal_B, coal_AB, coal_C, coal_ABC,
+        coal_A, coal_B, coal_AB, coal_BC, coal_C, coal_ABC,
         m,
         n_int_AB, n_int_ABC)
     tr = pd.DataFrame(tr, columns=['From', 'To', 'Prob']).pivot(index = ['From'], columns = ['To'], values = ['Prob'])
@@ -451,7 +458,7 @@ def trans_emiss_calc_introgression(
     em = get_emission_prob_mat_introgression(
         t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,   t_m, 
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
-        coal_A, coal_B, coal_AB, coal_C, coal_ABC,
+        coal_A, coal_B, coal_AB, coal_BC, coal_C, coal_ABC,
         n_int_AB, n_int_ABC,
         mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC
     )
@@ -552,21 +559,21 @@ def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead
 
 def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
     # Define time model (optimized parameters)
-    if len(arg_lst) == 8:
-        t_1, t_2, t_upper, t_m, N_AB, N_ABC, r, m = arg_lst
+    if len(arg_lst) == 9:
+        t_1, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
         t_A = t_B = t_1
         t_C = t_1 + t_2
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
         t_out = t_1 + t_2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
+    elif len(arg_lst) == 12:
+        t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
     elif len(arg_lst) == 11:
-        t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_ABC, r, m = arg_lst
-    elif len(arg_lst) == 10:
-        t_A, t_B, t_C, t_2, t_upper, t_m, N_AB, N_ABC, r, m = arg_lst
+        t_A, t_B, t_C, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
         t_out = (((t_A+t_B)/2+t_2)+t_C)/2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
     # Calculate transition and emission probabilities
     a, b, pi, hidden_names, observed_names = trans_emiss_calc_introgression(
-        t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_ABC, r, m,
+        t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m,
         d['n_int_AB'], d['n_int_ABC']
     )
     # Save indices for hidden and observed states

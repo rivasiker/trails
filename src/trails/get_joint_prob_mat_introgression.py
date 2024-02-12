@@ -11,7 +11,7 @@ from trails.get_tab_introgression import get_tab_ABC_introgression
 def get_joint_prob_mat_introgression(
         t_A,    t_B,    t_AB,    t_C,    t_m,
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
-        coal_A, coal_B, coal_AB, coal_C, coal_ABC,
+        coal_A, coal_B, coal_AB, coal_BC, coal_C, coal_ABC,
         m,
         n_int_AB, n_int_ABC,
         cut_AB = 'standard', cut_ABC = 'standard'):
@@ -47,6 +47,8 @@ def get_joint_prob_mat_introgression(
         Coalescent rate for the one-sequence CTMC of the second sequence (B)  
     coal_AB : float
         Coalescent rate for the two-sequence CTMC (AB)  
+    coal_BC : float
+        Coalescent rate for the two-sequence CTMC (BC)  
     coal_C : float
         Coalescent rate for the one-sequence CTMC of the third sequence (C)    
     coal_ABC : float
@@ -93,6 +95,7 @@ def get_joint_prob_mat_introgression(
     trans_mat_B = trans_mat_num(trans_mat_1, coal_B, rho_B)
     trans_mat_C = trans_mat_num(trans_mat_1, coal_C, rho_C)
     trans_mat_AB = trans_mat_num(trans_mat_2, coal_AB, rho_AB)
+    trans_mat_BC = trans_mat_num(trans_mat_2, coal_BC, rho_AB)
 
     ##########################
     ### One-sequence CTMCs ###
@@ -129,7 +132,7 @@ def get_joint_prob_mat_introgression(
     # Re-order states
     pi_BC_full = [comb_BC_value_full[comb_BC_name_full.index(i)] if i in comb_BC_name_full else 0 for i in state_space_2]
     # Calculate the final probability vector at the second speciation time
-    final_BC_full = pi_BC_full @ expm(trans_mat_AB*(t_AB+t_m))
+    final_BC_full = pi_BC_full @ expm(trans_mat_BC*(t_AB+t_m))
     # Obtain the correct state space for BC
     state_space_BC = [j.replace('1', '4') for j in state_space_2]
     state_space_BC = [j.replace('3', '6') for j in state_space_BC]
@@ -142,7 +145,7 @@ def get_joint_prob_mat_introgression(
     # This is the transition matrix and state space for when lineages are missing
     (trans_mat_2_miss, state_space_2_miss) = load_trans_mat_miss()
     state_space_BC_miss = [literal_eval(i) for i in state_space_2_miss]
-    trans_mat_BC_miss = trans_mat_num(trans_mat_2_miss, coal_AB, rho_AB)
+    trans_mat_BC_miss = trans_mat_num(trans_mat_2_miss, coal_BC, rho_AB)
     # Combine the state space of the migrated B lineages with the state space of C
     (comb_BC_name_miss, comb_BC_value_miss) = combine_states(state_space_C, state_space_B_right[2::], final_C, final_B_right[2::])
     # Re-order states
