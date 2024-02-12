@@ -229,7 +229,7 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
                 elif r == R < L:
                     pool_lst.append((L, r, R))
     # starttim = time.time()
-    if (n_int_AB == 1) and (n_int_ABC < 10):
+    if (n_int_AB == 1) and (n_int_ABC < 3):
         init_worker_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
         res_lst = [pool_AB_total(*x) for x in pool_lst]
         for result in res_lst:
