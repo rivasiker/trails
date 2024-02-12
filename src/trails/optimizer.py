@@ -488,8 +488,12 @@ def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
     if info['Nfeval'] == 0:
         pd.DataFrame({'idx': list(hidden_names.keys()), 'hidden': list(hidden_names.values())}).to_csv('hidden_states.csv', index = False)
         pd.DataFrame({'idx': list(observed_names.keys()), 'observed': list(observed_names.values())}).to_csv('observed_states.csv', index = False)
+    try:
+        ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+    except KeyError:
+        ncpus = mp.cpu_count()
     # Calculate log-likelihood
-    if len(V_lst) >= 500:
+    if len(V_lst) >= ncpus:
         loglik = loglik_wrapper_par(a, b, pi, V_lst)
     else:
         loglik = loglik_wrapper(a, b, pi, V_lst)
@@ -570,7 +574,12 @@ def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
         pd.DataFrame({'idx': list(hidden_names.keys()), 'hidden': list(hidden_names.values())}).to_csv('hidden_states.csv', index = False)
         pd.DataFrame({'idx': list(observed_names.keys()), 'observed': list(observed_names.values())}).to_csv('observed_states.csv', index = False)
     # Calculate log-likelihood
-    if len(V_lst) >= 500:
+    try:
+        ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+    except KeyError:
+        ncpus = mp.cpu_count()
+    # Calculate log-likelihood
+    if len(V_lst) >= ncpus:
         loglik = loglik_wrapper_par(a, b, pi, V_lst)
     else:
         loglik = loglik_wrapper(a, b, pi, V_lst)
