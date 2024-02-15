@@ -40,6 +40,7 @@ t_1 = 240000*mu
 t_A = t_1
 t_B = t_1
 t_2 = 40000*mu
+t_C = t_1+t_2
 t_3 = 800000*mu
 t_upper = t_3-cutpoints_ABC(n_int_ABC,  1/N_ABC)[-2]
 t_out = t_1+t_2+t_3+2*N_ABC
@@ -96,7 +97,7 @@ from trails.optimizer import trans_emiss_calc
 import pandas as pd
 
 transitions, emissions, starting, hidden_states, observed_states = trans_emiss_calc(
-    t_1, t_1, t_1+t_2, t_2, t_upper, t_out,
+    t_1, t_1, t_C, t_2, t_upper, t_out,
     N_AB, N_ABC, r, n_int_AB, n_int_ABC)
 ```
 
@@ -141,17 +142,17 @@ print(df_emissions)
 
 ```
          hidden observed     value
-0     (0, 0, 0)     AAAA  0.236472
-1     (0, 0, 0)     AAAC  0.003146
-2     (0, 0, 0)     AAAG  0.003146
-3     (0, 0, 0)     AAAT  0.003146
-4     (0, 0, 0)     AACA  0.000459
+0     (0, 0, 0)     AAAA  0.236476
+1     (0, 0, 0)     AAAC  0.003147
+2     (0, 0, 0)     AAAG  0.003147
+3     (0, 0, 0)     AAAT  0.003147
+4     (0, 0, 0)     AACA  0.000458
 ...         ...      ...       ...
-6907  (3, 2, 2)     TTGT  0.000905
-6908  (3, 2, 2)     TTTA  0.002240
-6909  (3, 2, 2)     TTTC  0.002240
-6910  (3, 2, 2)     TTTG  0.002240
-6911  (3, 2, 2)     TTTT  0.232358
+6907  (3, 2, 2)     TTGT  0.000553
+6908  (3, 2, 2)     TTTA  0.002953
+6909  (3, 2, 2)     TTTC  0.002953
+6910  (3, 2, 2)     TTTG  0.002953
+6911  (3, 2, 2)     TTTT  0.235440
 
 [6912 rows x 3 columns]
 ```
