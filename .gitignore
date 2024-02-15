@@ -1,3 +1,8 @@
 .conda/
 .ipynb_checkpoints/
 src/trails/__pycache__/
+dist/
+src/trails_rivasiker.egg-info/
+dist/trails-rivasiker-0.0.2.tar.gz
+dist/trails_rivasiker-0.0.2-py3-none-any.whl
+src/trails_rivasiker.egg-info/PKG-INFO
