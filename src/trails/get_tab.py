@@ -408,7 +408,6 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
             ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
         except KeyError:
             ncpus = mp.cpu_count()
-        init_worker_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
         pool = Pool(
             ncpus, 
             initializer=init_worker_ABC, 
@@ -580,15 +579,16 @@ def init_worker_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_AB
 def init_worker_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC):
     global shared_data
     shared_data = (pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
-    
+
 
 def pool_ABC(l, L, r, R):
     # If shared_data is not defined, import it from get_tab_introgression.py
     try:
-        shared_data
+        global shared_data
+        pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC = shared_data
     except NameError:
-        from trails.get_tab_introgression import shared_data
-    pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC = shared_data
+        from trails.get_tab_introgression import shared_data 
+        pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC = shared_data
     tab = []
     # starttim =  time.time()
     if l < L < r < R:
