@@ -1,24 +1,99 @@
 # TRAILS
 
-Define demographic model and calculate transition and emission probabilities:
+TRAILS is a coalescent hidden Markov model (HMM) that reconstructs demographic parameters (ancestral Ne and split times) for three species and an outgroup. After model fitting, TRAILS can also perform posterior decoding to identify incomplete lineage sorting fragments. The original method is described in [Rivas-González et al. 2024](https://doi.org/10.1371/journal.pgen.1010836).
+
+## Instalation
+
+The necessary packages for running trails can be installed through conda:
+
+```bash
+conda create -n trails -c conda-forge python=3.8 "ray-default" pandas numba numpy scipy biopython
+conda activate trails
+```
+
+The TRAILS python package can be installed from pip:
+
+```bash
+pip install trails-rivasiker
+```
+
+## Model optimization
+
+Demographic parameters can be optimized using the `optimizer` function:
 
 ```python
-from trails.optimizer import trans_emiss_calc
+# Load functions
 from trails.cutpoints import cutpoints_ABC
-import pandas as pd
+from trails.optimizer import optimizer
+from trails.read_data import maf_parser
 
+# Define fixed parameters
 n_int_AB = 3
 n_int_ABC = 3
 mu = 2e-8
+method = 'Nelder-Mead'
 
+# Define optimized parameters
 N_AB = 25000*2*mu
 N_ABC = 25000*2*mu
 t_1 = 240000*mu
+t_A = t_1
+t_B = t_1
 t_2 = 40000*mu
 t_3 = 800000*mu
 t_upper = t_3-cutpoints_ABC(n_int_ABC,  1/N_ABC)[-2]
 t_out = t_1+t_2+t_3+2*N_ABC
 r = 1e-8/mu
+
+# Define initial parameters
+t_init_A = t_A
+t_init_B = t_B
+t_init_C = t_C
+t_init_2 = t_2
+t_init_upper = t_upper
+N_init_AB = N_AB
+N_init_ABC = N_ABC
+r_init = r
+
+# Define parameter boundaries as dictionary, with entries being
+# 'param_name': [initial_value, lower_bound, upper_bound]
+dct = {
+    't_A':     [t_init_A,     t_A/10, t_A*10], 
+    't_B':     [t_init_B,     t_B/10, t_B*10], 
+    't_C':     [t_init_C,     t_C/10, t_C*10], 
+    't_2':     [t_init_2,     t_2/10, t_2*10], 
+    't_upper': [t_init_upper, t_upper/10, t_upper*10], 
+    'N_AB':    [N_init_AB,    N_AB/10,  N_AB*10], 
+    'N_ABC':   [N_init_ABC,   N_ABC/10,  N_ABC*10], 
+    'r':       [r_init,       r/10,  r*10]
+    }
+
+# Define fixed parameter values
+dct2 = {'n_int_AB':n_int_AB, 'n_int_ABC':n_int_ABC}
+
+# Define list of species
+sp_lst = ['species1','species2','species3','outgroup']
+# Read MAF alignment
+alignment = maf_parser('path_to_alignment/alignment.maf', sp_lst)
+
+# Run optimization
+res = optimizer(
+    optim_params = dct, 
+    fixed_params = dct2, 
+    V_lst = alignment, 
+    res_name = 'optimization.csv',
+    method = method, 
+    header = True
+    )
+```
+
+## Transition and emission probabilities
+
+Transition and emission probabilities can be defined after fixing the demographic parameters using the `trans_emiss_calc` function:
+
+```python
+from trails.optimizer import trans_emiss_calc
+import pandas as pd
 
 transitions, emissions, starting, hidden_states, observed_states = trans_emiss_calc(
     t_1, t_1, t_1+t_2, t_2, t_upper, t_out,
@@ -79,4 +154,14 @@ print(df_emissions)
 6911  (3, 2, 2)     TTTT  0.232358
 
 [6912 rows x 3 columns]
+```
+
+## Posterior probability
+
+Posterior probabilities can be calculated using the `post_prob_wrapper` function:
+
+```python
+from trails.optimizer import post_prob_wrapper
+
+post_prob = post_prob_wrapper(transitions, emissions, starting, alignment)
 ```
