@@ -414,8 +414,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
             ncpus = mp.cpu_count()
         pool = Pool(
             ncpus, 
-            initializer=init_worker(rand_id),
-            initargs=(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC,)
+            initializer=init_worker,
+            initargs=(rand_id,)
         )
         for result in pool.starmap_async(pool_ABC, pool_lst).get():
             for x in result:
