@@ -7,6 +7,8 @@ from trails.get_times import get_times
 from trails.get_tab import precomp, get_ABC_precomp, pool_ABC
 from trails.vanloan import vanloan_1, vanloan_2, instant_mat
 from scipy.linalg import expm
+from trails.get_tab import write_info_AB, write_info_ABC
+import pickle as pkl
 
 
 
@@ -229,8 +231,9 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
                 elif r == R < L:
                     pool_lst.append((L, r, R))
     # starttim = time.time()
+    rand_id = write_info_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
+    pool_lst = [i + (rand_id,) for i in pool_lst]
     if (n_int_AB == 1) and (n_int_ABC < 3):
-        init_worker_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
         res_lst = [pool_AB_total(*x) for x in pool_lst]
         for result in res_lst:
             for x in result:
@@ -243,7 +246,6 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
             ncpus = mp.cpu_count()
         pool = Pool(
             ncpus, 
-            initializer=init_worker_AB, 
             initargs=(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB,)
         )
         for result in pool.starmap_async(pool_AB_total, pool_lst).get():
@@ -253,6 +255,7 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
         pool.close()
     # endtim = time.time()
     # print("First {}".format(endtim - starttim))
+    os.remove(f"{rand_id}.pkl")
     
     ############################################
     ### Deep coalescence -> deep coalescence ###
@@ -302,9 +305,10 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
                         pool_lst.append((l, L, r, R))
                     elif r < l == L < R:
                         pool_lst.append((l, L, r, R))
+    rand_id = write_info_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
+    pool_lst = [i + (rand_id,) for i in pool_lst]
     # starttim = time.time()
     if n_int_ABC in [1, 2]:
-        init_worker_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
         res_lst = [pool_ABC(*x) for x in pool_lst]
         for result in res_lst:
             for x in result:
@@ -317,7 +321,6 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
             ncpus = mp.cpu_count()
         pool = Pool(
             ncpus, 
-            initializer=init_worker_ABC, 
             initargs=(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC,)
         )
         for result in pool.starmap_async(pool_ABC, pool_lst).get():
@@ -326,13 +329,15 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
                 acc_tot += 1
         pool.close()
     # endtim = time.time()
-    # print("Second {}".format(endtim - starttim))
-        
+    # print("Second {}".format(endtim - starttim))  
     # print(tab[:, 2].sum())
+    os.remove(f"{rand_id}.pkl")
     return tab
 
 
-def pool_AB_total(L, r, R):
+def pool_AB_total(L, r, R, rand_id):
+    with open(f"{rand_id}.pkl", 'rb') as pickle_file:
+        shared_data = pkl.load(pickle_file)
     pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB = shared_data
     tab = []
     # start = time.time()
@@ -518,11 +523,3 @@ def pool_AB_total(L, r, R):
     # end = time.time()
     # print("((0, {}, {}) -> (i, {}, {})) = {}".format('l', L, r, R, end - start))
     return tab
-
-def init_worker_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB):
-    global shared_data
-    shared_data = (pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
-
-def init_worker_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC):
-    global shared_data
-    shared_data = (pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
