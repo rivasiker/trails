@@ -7,8 +7,8 @@ from scipy.special import comb
 from trails.vanloan import vanloan_1, vanloan_2, vanloan_3, instant_mat
 from trails.get_times import get_times
 from trails.get_ordered import get_ordered
-import pickle as pkl
-import random
+from trails.shared_data import init_worker
+from trails.shared_data import write_info_AB, write_info_ABC
 # import time
 
 def precomp(trans_mat, times):
@@ -322,8 +322,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                     pool_lst.append((L, r, R))
     # starttim = time.time()
     rand_id = write_info_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
-    pool_lst = [i + (rand_id,) for i in pool_lst]
     if (n_int_AB == 1) and (n_int_ABC < 10):
+        init_worker(rand_id)
         res_lst = [pool_AB(*x) for x in pool_lst]
         for result in res_lst:
             for x in result:
@@ -336,7 +336,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
             ncpus = mp.cpu_count()
         pool = Pool(
             ncpus, 
-            initargs=(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB,)
+            initializer=init_worker,
+            initargs=(rand_id,)
         )
         for result in pool.starmap_async(pool_AB, pool_lst).get():
             for x in result:
@@ -398,9 +399,9 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
                     elif r < l == L < R:
                         pool_lst.append((l, L, r, R))
     rand_id = write_info_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
-    pool_lst = [i + (rand_id,) for i in pool_lst]
     # starttim = time.time()
     if n_int_ABC in [1, 2]:
+        init_worker(rand_id)
         res_lst = [pool_ABC(*x) for x in pool_lst]
         for result in res_lst:
             for x in result:
@@ -413,6 +414,7 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
             ncpus = mp.cpu_count()
         pool = Pool(
             ncpus, 
+            initializer=init_worker(rand_id),
             initargs=(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC,)
         )
         for result in pool.starmap_async(pool_ABC, pool_lst).get():
@@ -427,9 +429,8 @@ def get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n
     return tab
 
 
-def pool_AB(L, r, R, rand_id):
-    with open(f"{rand_id}.pkl", 'rb') as pickle_file:
-        shared_data = pkl.load(pickle_file)
+def pool_AB(L, r, R):
+    from trails.shared_data import shared_data
     pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB = shared_data
     tab = []
     # start = time.time()
@@ -576,9 +577,8 @@ def pool_AB(L, r, R, rand_id):
     # print("((0, {}, {}) -> (i, {}, {})) = {}".format('l', L, r, R, end - start))
     return tab
 
-def pool_ABC(l, L, r, R, rand_id):
-    with open(f"{rand_id}.pkl", 'rb') as pickle_file:
-        shared_data = pkl.load(pickle_file)
+def pool_ABC(l, L, r, R):
+    from trails.shared_data import shared_data
     pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC = shared_data
     tab = []
     # starttim =  time.time()
@@ -923,16 +923,3 @@ def pool_ABC(l, L, r, R, rand_id):
     # print("((i, {}, {}) -> (j, {}, {})) = {}".format(l, L, r, R, endtim - starttim))
     return tab
 
-def write_info_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB):
-    shared_data = (pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
-    rand_id = '%030x' % random.randrange(16**30)
-    with open(f"{rand_id}.pkl", 'wb') as pickle_file:
-        pkl.dump(shared_data, pickle_file)
-    return rand_id
-
-def write_info_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC):
-    shared_data = (pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
-    rand_id = '%030x' % random.randrange(16**30)
-    with open(f"{rand_id}.pkl", 'wb') as pickle_file:
-        pkl.dump(shared_data, pickle_file)
-    return rand_id
