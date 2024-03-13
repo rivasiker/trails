@@ -6,3 +6,8 @@ src/trails_rivasiker.egg-info/
 dist/trails-rivasiker-0.0.2.tar.gz
 dist/trails_rivasiker-0.0.2-py3-none-any.whl
 src/trails_rivasiker.egg-info/PKG-INFO
+src/trails_rivasiker.egg-info/SOURCES.txt
+src/trails_rivasiker.egg-info/PKG-INFO
+dist/trails_rivasiker-0.0.2-py3-none-any.whl
+dist/trails-rivasiker-0.0.2.tar.gz
+.DS_Store
