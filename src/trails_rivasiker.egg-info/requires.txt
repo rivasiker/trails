@@ -1,6 +1,0 @@
-numpy
-pandas
-scipy
-ray
-numba
-biopython
