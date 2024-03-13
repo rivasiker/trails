@@ -48,7 +48,7 @@ def p_b_given_a(t, Q):
     return df
 
 @njit
-def JC69_analytical_integral(aa, bb, cc, dd, t, mu):
+def JC69_analytical_integral(aa, bb, cc, dd, t, mu, k):
     """
     This function calculates the probability of observing the 
     nucleotides bb, cc and dd given aa, t and mu. aa and bb are the starting 
@@ -73,28 +73,30 @@ def JC69_analytical_integral(aa, bb, cc, dd, t, mu):
         Total time of the interval (from a/b/c to d)
     mu : numeric
         The mutation rate for the JC69 model
+    k : numeric
+        The coalescent rate
     """
     alpha = 3/4 if aa==dd else -1/4
     beta  = 3/4 if dd==bb else -1/4
     gamma = 3/4 if dd==cc else -1/4
     
-    res = (1 + (16*beta*gamma)/np.exp(mu*t) - 
-           (4*gamma)/(np.exp(mu*t)*(-1 + mu)) + 
-           (4*beta)/(1 + mu) + 
-           4*alpha*((1 + mu)**(-1) + 
-                    (4*gamma*(1 + 4*beta + mu))/
-                    (np.exp(mu*t)*(1 + mu)) + 
-                    (4*beta)/(1 + 2*mu)) + 
-           (-1 - (16*beta*gamma)/np.exp(mu*t) + 
-            (4*gamma)/(-1 + mu) - 
-            (4*beta)/(np.exp(mu*t)*(1 + mu)) - 
-            (4*alpha*(np.exp(mu*t)*(1 + 2*mu)*
-                      (1 + 4*gamma*(1 + mu)) + 
-                      4*beta*(1 + mu + gamma*
-                              (4 + 8*mu))))/(np.exp(2*mu*t)*
-                                             (1 + mu)*(1 + 2*mu)))/np.exp(t))/(64*(1 - np.exp(-t)))
+    res = (k*(((-1 + np.exp(k*t))*(np.exp(mu*t) + 
+            16*(alpha + beta)*gamma))/
+            (np.exp((k + mu)*t)*k) + 
+        4*(gamma/(np.exp(k*t)*(-k + mu)) + 
+            (alpha + beta)/(k + mu) - 
+            (alpha + beta)/(np.exp((k + mu)*t)*
+            (k + mu)) + (4*alpha*beta)/
+            (k + 2*mu) + 
+            (gamma*((k - mu)**(-1) + 
+                (16*alpha*beta)/(k + mu)))/
+            np.exp(mu*t) + (4*alpha*beta*
+            ((-4*gamma)/(k + mu) - 
+                (k + 2*mu)**(-1)))/
+            np.exp((k + 2*mu)*t))))/(64*(1 - np.exp(-(k*t))))
+    
     return res
-def p_b_c_given_a_JC69_analytical(t, mu):
+def p_b_c_given_a_JC69_analytical(t, mu, k):
     """
     This function returns a data frame with the values of
     P(b, c | a) for all combinations of nucleotides. 
@@ -105,6 +107,8 @@ def p_b_c_given_a_JC69_analytical(t, mu):
         Total time of the interval (from a/b/c to d)
     mu : numeric
         The mutation rate for the JC69 model
+    k : numeric
+        The coalescent rate
     """
     nt = ['A', 'G', 'C', 'T']
     arr = np.empty((4**3, 4))
@@ -114,7 +118,7 @@ def p_b_c_given_a_JC69_analytical(t, mu):
             for cc in range(4):
                 cumsum = 0
                 for dd in range(4):
-                    cumsum += JC69_analytical_integral(aa, bb, cc, dd, t, mu)
+                    cumsum += JC69_analytical_integral(aa, bb, cc, dd, t, mu, k)
                 arr[acc] = [aa,bb,cc,cumsum]
                 acc += 1
     df = pd.DataFrame(arr, columns = ['a', 'b', 'c', 'prob'])
@@ -133,6 +137,9 @@ def JC69_analytical_integral_double(aa, bb, cc, dd, ee, ff, t, mu):
     ff is the nucleotide at the time of the second coalescent. t is the 
     total time of the interval. The returned value corresponds to integrating 
     the coalescent to e and f over the entirety of t. 
+
+    Note that the coalescent rate is always 1 between two sequences, and 3
+    between 3 sequences.
     
     P(b = bb, c == cc, d == dd, e == ee, f == ff | a == aa, Q, t)
     
@@ -397,7 +404,8 @@ def calc_emissions_single_JC69(
     a0_a1_t_vec, b0_b1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
     ab1c1_abc0_t, c0_c1_t_vec, d0_abc0_t_vec,
     a0_a1_mu_vec, b0_b1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-    ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec
+    ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec,
+    coal_rate_1, coal_rate_2
 ):
     """
     This function returns the emission probabilities of a hidden
@@ -433,6 +441,9 @@ def calc_emissions_single_JC69(
     a1b1_ab0_mu, ab1c1_abc0_mu : numeric
         Mutation rates for the first and second coalescent intervals, 
         respectively.
+    coal_rate_1, coal_rate_2 : numeric
+        Coalescent rate  of the first and second coalescent events,
+        respectively.
     """
   
     # a0 to a1
@@ -466,12 +477,12 @@ def calc_emissions_single_JC69(
     # df_ab[ab0][ab1]
     
     # First coalescent
-    df_first = p_b_c_given_a_JC69_analytical(t = a1b1_ab0_t, mu = a1b1_ab0_mu)
+    df_first = p_b_c_given_a_JC69_analytical(t = a1b1_ab0_t, mu = a1b1_ab0_mu, k = coal_rate_1)
     df_first = b_c_given_a_to_dict_a_b_c(df_first)
     # df_first[a1][b1][ab0]
     
     # Second coalescent
-    df_second = p_b_c_given_a_JC69_analytical(t = ab1c1_abc0_t, mu = ab1c1_abc0_mu)
+    df_second = p_b_c_given_a_JC69_analytical(t = ab1c1_abc0_t, mu = ab1c1_abc0_mu, k = coal_rate_2)
     df_second = b_c_given_a_to_dict_a_b_c(df_second)
     # df_second[ab1][c1][abc0]
     
@@ -662,7 +673,8 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,
                 a0_a1_t_vec, b0_b1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, c0_c1_t_vec, d0_abc0_t_vec,
                 a0_a1_mu_vec, b0_b1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec
+                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec,
+                coal_ABC, coal_ABC
             )
             states[acc] = (1, i, j)
             probs[acc] = emissions
@@ -673,7 +685,8 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,
                 a0_a1_t_vec, c0_c1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, b0_b1_t_vec, d0_abc0_t_vec,
                 a0_a1_mu_vec, c0_c1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-                ab1c1_abc0_mu, b0_b1_mu_vec, d0_abc0_mu_vec
+                ab1c1_abc0_mu, b0_b1_mu_vec, d0_abc0_mu_vec,
+                coal_ABC, coal_ABC
             )
             new_emissions = {}
             for k in list(emissions.keys()):
@@ -687,7 +700,8 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,
                 b0_b1_t_vec, c0_c1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, a0_a1_t_vec, d0_abc0_t_vec,
                 b0_b1_mu_vec, c0_c1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-                ab1c1_abc0_mu, a0_a1_mu_vec, d0_abc0_mu_vec
+                ab1c1_abc0_mu, a0_a1_mu_vec, d0_abc0_mu_vec,
+                coal_ABC, coal_ABC
             )
             new_emissions = {}
             for k in list(emissions.keys()):
@@ -774,7 +788,8 @@ def get_emission_prob_mat(t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,
                 a0_a1_t_vec, b0_b1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, c0_c1_t_vec, d0_abc0_t_vec,
                 a0_a1_mu_vec, b0_b1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec
+                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec,
+                coal_AB, coal_ABC
             )
             states[acc] = (0, i, j)
             probs[acc] = emissions
@@ -864,7 +879,8 @@ def get_emission_prob_mat_introgression(
                 a0_a1_t_vec, b0_b1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, c0_c1_t_vec, d0_abc0_t_vec,
                 a0_a1_mu_vec, b0_b1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec
+                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec,
+                coal_ABC, coal_ABC
             )
             states[acc] = (1, i, j)
             probs[acc] = emissions
@@ -875,7 +891,8 @@ def get_emission_prob_mat_introgression(
                 a0_a1_t_vec, c0_c1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, b0_b1_t_vec, d0_abc0_t_vec,
                 a0_a1_mu_vec, c0_c1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-                ab1c1_abc0_mu, b0_b1_mu_vec, d0_abc0_mu_vec
+                ab1c1_abc0_mu, b0_b1_mu_vec, d0_abc0_mu_vec,
+                coal_ABC, coal_ABC
             )
             new_emissions = {}
             for k in list(emissions.keys()):
@@ -889,7 +906,8 @@ def get_emission_prob_mat_introgression(
                 b0_b1_t_vec, c0_c1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, a0_a1_t_vec, d0_abc0_t_vec,
                 b0_b1_mu_vec, c0_c1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-                ab1c1_abc0_mu, a0_a1_mu_vec, d0_abc0_mu_vec
+                ab1c1_abc0_mu, a0_a1_mu_vec, d0_abc0_mu_vec,
+                coal_ABC, coal_ABC
             )
             new_emissions = {}
             for k in list(emissions.keys()):
@@ -976,7 +994,8 @@ def get_emission_prob_mat_introgression(
                 a0_a1_t_vec, b0_b1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, c0_c1_t_vec, d0_abc0_t_vec,
                 a0_a1_mu_vec, b0_b1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec
+                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec,
+                coal_AB, coal_ABC
             )
             states[acc] = (0, i, j)
             probs[acc] = emissions
@@ -1007,7 +1026,8 @@ def get_emission_prob_mat_introgression(
                 a0_a1_t_vec, b0_b1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
                 ab1c1_abc0_t, c0_c1_t_vec, d0_abc0_t_vec,
                 a0_a1_mu_vec, b0_b1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec
+                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec,
+                coal_BC, coal_ABC
             )
 
             new_emissions = {}
