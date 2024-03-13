@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="trails-rivasiker",
-    version="0.0.1",
+    version="0.0.2",
     author="Iker Rivas-González",
     author_email="irg@birc.au.dk",
     description="Tree reconstruction of ancestry using incomplete lineage sorting",
