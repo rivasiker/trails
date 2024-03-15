@@ -17,6 +17,14 @@ The TRAILS python package can be installed from pip:
 pip install trails-rivasiker
 ```
 
+The development version can be installed by cloning this repository and installing the python package locally:
+
+```bash
+git clone https://github.com/rivasiker/trails.git
+cd trails
+pip3 install -e .
+```
+
 ## Model optimization
 
 Demographic parameters can be optimized using the `optimizer` function:
