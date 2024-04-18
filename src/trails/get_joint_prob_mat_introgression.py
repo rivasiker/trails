@@ -104,13 +104,13 @@ def get_joint_prob_mat_introgression(
     # Species A, from present to first speciation event
     final_A = expm(trans_mat_A*t_A)[0]
     # Species B, from present to migration event
-    final_B = expm(trans_mat_B*(t_B-t_m))[0]
+    final_B = expm(trans_mat_B*t_B)[0]
     # Species C, from present to migration event
-    final_C = expm(trans_mat_C*(t_C-t_AB-t_m))[0]
+    final_C = expm(trans_mat_C*t_C)[0]
     # Species A, from present to second speciation event
     final_A_bis = expm(trans_mat_A*(t_A+t_AB))[0]
     # Species C, from present to second speciation event
-    final_C_bis = expm(trans_mat_C*t_C)[0]
+    final_C_bis = expm(trans_mat_C*(t_C+t_m+t_AB))[0]
 
     # Split probabilities for the left and the right path
     # Left path: lineages do not migrate and will later mix with species A

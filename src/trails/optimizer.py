@@ -373,10 +373,10 @@ def trans_emiss_calc_introgression(
         Time in generations from present to the first speciation event for species A
         (times mutation rate)
     t_B : numeric
-        Time in generations from present to the first speciation event for species B
+        Time in generations from present to the migration event for species B
         (times mutation rate)
     t_C : numeric
-        Time in generations from present to the second speciation event for species C
+        Time in generations from present to the migration event for species C
         (times mutation rate)
     t_2 : numeric
         Time in generations from the first speciation event to the second speciation event
@@ -561,8 +561,8 @@ def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
     # Define time model (optimized parameters)
     if len(arg_lst) == 9:
         t_1, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
-        t_A = t_B = t_1
-        t_C = t_1 + t_2
+        t_A = t_1
+        t_B = t_C = t_1-t_m
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
         t_out = t_1 + t_2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
     elif len(arg_lst) == 12:
@@ -570,7 +570,7 @@ def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
     elif len(arg_lst) == 11:
         t_A, t_B, t_C, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
-        t_out = (((t_A+t_B)/2+t_2)+t_C)/2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
+        t_out = (((t_A+(t_B+t_m))/2+t_2)+(t_C+t_m+t_2))/2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
     # Calculate transition and emission probabilities
     a, b, pi, hidden_names, observed_names = trans_emiss_calc_introgression(
         t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m,

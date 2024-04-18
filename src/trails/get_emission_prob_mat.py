@@ -821,14 +821,17 @@ def get_emission_prob_mat_introgression(
         
     Parameters
     ----------
-    t_A, t_B : numeric
+    t_A : numeric
         Time between present time and the first speciation time for
-        species A and B, respectively. They show be equal. 
+        species A. 
+    t_B : numeric
+        Time between present time and the migration event for
+        species A. 
     t_AB : numeric
         Time between speciation events.
     t_C : numeric
-        Time between present time and the second speciation time for 
-        species C. It should be t_A (or t_B) + t_AB.
+        Time between present time and the migration event for
+        species C. 
     t_upper : numeric
         Time between the last ABC interval and the third speciation time.
     t_peak : numeric
@@ -850,6 +853,10 @@ def get_emission_prob_mat_introgression(
         cut_ABC = cutpoints_ABC(n_int_ABC, coal_ABC)
     probs = np.empty((n_markov_states), dtype=object)
     states = np.empty((n_markov_states), dtype=object)
+
+    # Recode time
+    t_B = t_B+t_m
+    t_C = t_C+t_m+t_AB
     
     # Deep coalescence, two single coalescents
     acc = 0
