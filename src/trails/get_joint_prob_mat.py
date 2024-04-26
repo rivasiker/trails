@@ -10,7 +10,8 @@ def get_joint_prob_mat(t_A,    t_B,    t_AB,    t_C,
                       rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
                       coal_A, coal_B, coal_AB, coal_C, coal_ABC,
                       n_int_AB, n_int_ABC,
-                      cut_AB = 'standard', cut_ABC = 'standard'):
+                      cut_AB = 'standard', cut_ABC = 'standard', 
+                      tmp_path = './'):
     
     """
     This is a wrapper function that unifies all the CTMCs to 
@@ -156,6 +157,6 @@ def get_joint_prob_mat(t_A,    t_B,    t_AB,    t_C,
     
     
     # Run the three-sequence CTMC
-    tab_2 = get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n_int_AB)
+    tab_2 = get_tab_ABC(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n_int_AB, tmp_path)
     
     return tab_2

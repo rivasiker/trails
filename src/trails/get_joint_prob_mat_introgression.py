@@ -14,7 +14,8 @@ def get_joint_prob_mat_introgression(
         coal_A, coal_B, coal_AB, coal_BC, coal_C, coal_ABC,
         m,
         n_int_AB, n_int_ABC,
-        cut_AB = 'standard', cut_ABC = 'standard'):
+        cut_AB = 'standard', cut_ABC = 'standard', 
+        tmp_path = './'):
     """
     This is a wrapper function that unifies all the CTMCs to 
     get a matrix of joint probabilities for the HMM. 
@@ -204,7 +205,7 @@ def get_joint_prob_mat_introgression(
     # Calculate cutpoints
     if isinstance(cut_ABC, str):
         cut_ABC = cutpoints_ABC(n_int_ABC, coal_ABC)
-    joint_mat = get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, tab, tab_names, n_int_AB)
+    joint_mat = get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, tab, tab_names, n_int_AB, tmp_path)
 
     return joint_mat
 

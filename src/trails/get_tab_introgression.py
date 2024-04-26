@@ -11,7 +11,7 @@ from trails.shared_data import init_worker
 from trails.shared_data import write_info_AB, write_info_ABC
 
 
-def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n_int_AB):
+def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, names_tab_AB, n_int_AB, tmp_path):
     """
     This functions returns a table with joint probabilities of
     the states of the HMM after running a three-sequence CTMC
@@ -230,9 +230,9 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
                 elif r == R < L:
                     pool_lst.append((L, r, R))
     # starttim = time.time()
-    rand_id = write_info_AB(pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
+    rand_id = write_info_AB(tmp_path, pi_ABC, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC, n_int_AB, names_tab_AB)
     if (n_int_AB == 1) and (n_int_ABC < 3):
-        init_worker(rand_id)
+        init_worker(tmp_path, rand_id)
         res_lst = [pool_AB_total(*x) for x in pool_lst]
         for result in res_lst:
             for x in result:
@@ -246,7 +246,7 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
         pool = Pool(
             ncpus, 
             initializer=init_worker,
-            initargs=(rand_id,)
+            initargs=(tmp_path, rand_id,)
         )
         for result in pool.starmap_async(pool_AB_total, pool_lst).get():
             for x in result:
@@ -255,7 +255,7 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
         pool.close()
     # endtim = time.time()
     # print("First {}".format(endtim - starttim))
-    os.remove(f"{rand_id}.pkl")
+    os.remove(f"{tmp_path}/{rand_id}.pkl")
     
     ############################################
     ### Deep coalescence -> deep coalescence ###
@@ -305,10 +305,10 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
                         pool_lst.append((l, L, r, R))
                     elif r < l == L < R:
                         pool_lst.append((l, L, r, R))
-    rand_id = write_info_ABC(pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
+    rand_id = write_info_ABC(tmp_path, pi, om, omega_tot_ABC, pr, cut_ABC, dct_num, trans_mat_ABC)
     # starttim = time.time()
     if n_int_ABC in [1, 2]:
-        init_worker(rand_id)
+        init_worker(tmp_path, rand_id)
         res_lst = [pool_ABC(*x) for x in pool_lst]
         for result in res_lst:
             for x in result:
@@ -322,7 +322,7 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
         pool = Pool(
             ncpus, 
             initializer=init_worker,
-            initargs=(rand_id,)
+            initargs=(tmp_path, rand_id,)
         )
         for result in pool.starmap_async(pool_ABC, pool_lst).get():
             for x in result:
@@ -332,7 +332,7 @@ def get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, pi_ABC, n
     # endtim = time.time()
     # print("Second {}".format(endtim - starttim))  
     # print(tab[:, 2].sum())
-    os.remove(f"{rand_id}.pkl")
+    os.remove(f"{tmp_path}/{rand_id}.pkl")
     return tab
 
 

@@ -260,7 +260,7 @@ def write_list(lst, res_name):
         f.write('\n')
 
 def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_AB, n_int_ABC,
-                     cut_AB = 'standard', cut_ABC = 'standard'):
+                     cut_AB = 'standard', cut_ABC = 'standard', tmp_path = './'):
     """
     This function calculates the emission and transition probabilities
     given a certain set of parameters. 
@@ -332,7 +332,7 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_A
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
         coal_A, coal_B, coal_AB, coal_C, coal_ABC,
         n_int_AB, n_int_ABC,
-        cut_AB, cut_ABC
+        cut_AB, cut_ABC, tmp_path
     )
     tr = pd.DataFrame(tr, columns=['From', 'To', 'Prob']).pivot(index = ['From'], columns = ['To'], values = ['Prob'])
     tr.columns = tr.columns.droplevel()
@@ -362,7 +362,7 @@ def trans_emiss_calc(t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, n_int_A
 
 def trans_emiss_calc_introgression(
         t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m, n_int_AB, n_int_ABC,
-        cut_AB = 'standard', cut_ABC = 'standard'):
+        cut_AB = 'standard', cut_ABC = 'standard', tmp_path = './'):
     """
     This function calculates the emission and transition probabilities
     given a certain set of parameters. 
@@ -446,7 +446,8 @@ def trans_emiss_calc_introgression(
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
         coal_A, coal_B, coal_AB, coal_BC, coal_C, coal_ABC,
         m,
-        n_int_AB, n_int_ABC)
+        n_int_AB, n_int_ABC, 
+        cut_AB, cut_ABC, tmp_path)
     tr = pd.DataFrame(tr, columns=['From', 'To', 'Prob']).pivot(index = ['From'], columns = ['To'], values = ['Prob'])
     tr.columns = tr.columns.droplevel()
     hidden_names = list(tr.columns)
@@ -511,7 +512,7 @@ def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
     return -loglik
 
 
-def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead', header = True):
+def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead', header = True, tmp_path = './'):
     """
     Optimization function. 
     
@@ -551,7 +552,7 @@ def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead
     res = minimize(
         optimization_wrapper, 
         x0 = init_params,
-        args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time()}),
+        args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time(), 'tmp_path': tmp_path}),
         method = method,
         bounds = bnds, 
         options = options
@@ -596,7 +597,7 @@ def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
     info['Nfeval'] += 1
     return -loglik
     
-def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead', header = True):
+def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead', header = True, tmp_path = './'):
     """
     Optimization function. 
     
@@ -633,7 +634,7 @@ def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method 
     res = minimize(
         optimization_wrapper_introgression, 
         x0 = init_params,
-        args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time()}),
+        args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time(), 'tmp_path': tmp_path}),
         method = method,
         bounds = bnds, 
         options = options
