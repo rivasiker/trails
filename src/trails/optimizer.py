@@ -440,7 +440,7 @@ def trans_emiss_calc_introgression(
     mu_D = N_ref*(4/3)
     mu_AB = N_ref*(4/3)
     mu_ABC = N_ref*(4/3)
-    
+        
     tr = get_joint_prob_mat_introgression(
         t_A,    t_B,    t_AB,    t_C,    t_m,
         rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
@@ -490,7 +490,7 @@ def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
     # Calculate transition and emission probabilities
     a, b, pi, hidden_names, observed_names = trans_emiss_calc(
         t_A, t_B, t_C, t_2, t_upper, t_out, N_AB, N_ABC, r, 
-        d['n_int_AB'], d['n_int_ABC'], info['tmp_path']
+        d['n_int_AB'], d['n_int_ABC'], 'standard', 'standard', info['tmp_path']
     )
     # Save indices for hidden and observed states
     if info['Nfeval'] == 0:
@@ -575,7 +575,7 @@ def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
     # Calculate transition and emission probabilities
     a, b, pi, hidden_names, observed_names = trans_emiss_calc_introgression(
         t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m,
-        d['n_int_AB'], d['n_int_ABC'], info['tmp_path']
+        d['n_int_AB'], d['n_int_ABC'], 'standard', 'standard', info['tmp_path']
     )
     # Save indices for hidden and observed states
     if info['Nfeval'] == 0:
