@@ -541,7 +541,7 @@ def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead
     if header:
         write_list(['n_eval'] + list(optim_params.keys()) + ['loglik', 'time'], res_name)
     options = {
-        'maxiter': 3000,
+        'maxiter': 10000,
         'disp': True
     }
     # if method in ['L-BFGS-B', 'TNC']:
@@ -627,7 +627,7 @@ def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method 
     if header:
         write_list(['n_eval'] + list(optim_params.keys()) + ['loglik', 'time'], res_name)
     options = {
-        'maxiter': 3000,
+        'maxiter': 10000,
         'disp': True
     }
         
