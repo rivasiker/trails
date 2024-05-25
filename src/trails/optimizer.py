@@ -407,9 +407,6 @@ def trans_emiss_calc_introgression(
         Number of discretized time intervals in deep coalescent
     """
 
-    if n_int_AB != 1: 
-        raise ValueError('The introgression model is only implemented for n_int_AB = 1.')
-
     # Reference Ne (for normalization)
     N_ref = N_ABC
     # Speciation times (in coalescent units, i.e. number of generations / N_ref)

@@ -849,6 +849,7 @@ def get_emission_prob_mat_introgression(
     n_markov_states = 2*n_int_AB*n_int_ABC+n_int_ABC*3+3*comb(n_int_ABC, 2, exact = True)
     if cut_AB == 'standard':
         cut_AB = cutpoints_AB(n_int_AB, t_AB, coal_AB)
+    cut_BC = np.concatenate([[0], (cut_AB[1:]+t_m)])
     if cut_ABC == 'standard':
         cut_ABC = cutpoints_ABC(n_int_ABC, coal_ABC)
     probs = np.empty((n_markov_states), dtype=object)
@@ -1005,40 +1006,41 @@ def get_emission_prob_mat_introgression(
             acc += 1
 
     # Introgression states
-    for j in range(n_int_ABC):
-        a0_a1_t_vec = [t_B, 0]
-        a0_a1_mu_vec = [mu_B, mu_AB]
-        b0_b1_t_vec = [t_C, 0]
-        b0_b1_mu_vec = [mu_C, mu_AB]
-        c0_c1_t_vec = [t_A, t_AB, cut_ABC[j]]
-        c0_c1_mu_vec = [mu_A, mu_AB, mu_ABC]
-        ab0_ab1_t_vec = [0, cut_ABC[j]]
-        ab0_ab1_mu_vec = [mu_AB, mu_ABC]
-        a1b1_ab0_t = t_m+t_AB
-        a1b1_ab0_mu = mu_AB
-        ab1c1_abc0_t = cut_ABC[j+1]-cut_ABC[j] if j!=(n_int_ABC-1) else t_upper
-        ab1c1_abc0_mu = mu_ABC
-        add = t_upper+cut_ABC[n_int_ABC-1]-cut_ABC[j+1] if j!=(n_int_ABC-1) else 0
-        # d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
-        d0_abc0_t_vec = [t_out]+[add]
-        # d0_abc0_mu_vec = [mu_D, mu_ABC]
-        d0_abc0_mu_vec = [mu_D, mu_ABC]
-        
-        emissions = calc_emissions_single_JC69(
-            a0_a1_t_vec, b0_b1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
-            ab1c1_abc0_t, c0_c1_t_vec, d0_abc0_t_vec,
-            a0_a1_mu_vec, b0_b1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
-            ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec,
-            coal_BC, coal_ABC
-        )
+    for i in range(n_int_AB):
+        for j in range(n_int_ABC):
+            a0_a1_t_vec = [t_B, cut_BC[i]]
+            a0_a1_mu_vec = [mu_B, mu_AB]
+            b0_b1_t_vec = [t_C, cut_BC[i]]
+            b0_b1_mu_vec = [mu_C, mu_AB]
+            c0_c1_t_vec = [t_A, t_AB, cut_ABC[j]]
+            c0_c1_mu_vec = [mu_A, mu_AB, mu_ABC]
+            ab0_ab1_t_vec = [t_AB+t_m-cut_BC[i+1], cut_ABC[j]]
+            ab0_ab1_mu_vec = [mu_AB, mu_ABC]
+            a1b1_ab0_t = cut_BC[i+1]-cut_BC[i]
+            a1b1_ab0_mu = mu_AB
+            ab1c1_abc0_t = cut_ABC[j+1]-cut_ABC[j] if j!=(n_int_ABC-1) else t_upper
+            ab1c1_abc0_mu = mu_ABC
+            add = t_upper+cut_ABC[n_int_ABC-1]-cut_ABC[j+1] if j!=(n_int_ABC-1) else 0
+            # d0_abc0_t_vec = [t_A+t_AB+cut_ABC[n_int_ABC-1]+t_upper]+[t_peak+add]
+            d0_abc0_t_vec = [t_out]+[add]
+            # d0_abc0_mu_vec = [mu_D, mu_ABC]
+            d0_abc0_mu_vec = [mu_D, mu_ABC]
+            
+            emissions = calc_emissions_single_JC69(
+                a0_a1_t_vec, b0_b1_t_vec, a1b1_ab0_t, ab0_ab1_t_vec, 
+                ab1c1_abc0_t, c0_c1_t_vec, d0_abc0_t_vec,
+                a0_a1_mu_vec, b0_b1_mu_vec, a1b1_ab0_mu, ab0_ab1_mu_vec, 
+                ab1c1_abc0_mu, c0_c1_mu_vec, d0_abc0_mu_vec,
+                coal_BC, coal_ABC
+            )
 
-        new_emissions = {}
-        for k in list(emissions.keys()):
-            new_emissions[k[2]+k[0]+k[1]+k[3]] = emissions[k]     
-        markov = (4, i, i)
-        states[acc] = markov
-        probs[acc] = new_emissions
-        acc += 1
+            new_emissions = {}
+            for k in list(emissions.keys()):
+                new_emissions[k[2]+k[0]+k[1]+k[3]] = emissions[k]     
+            markov = (4, i, j)
+            states[acc] = markov
+            probs[acc] = new_emissions
+            acc += 1
    
     probs = pd.DataFrame(list(probs))
     probs.insert(0, 'hidden_state', states)

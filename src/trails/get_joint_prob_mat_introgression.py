@@ -1,10 +1,12 @@
 import numpy as np
 from scipy.linalg import expm
 from ast import literal_eval
-from trails.cutpoints import cutpoints_ABC
+from trails.cutpoints import cutpoints_AB, cutpoints_ABC
 from trails.load_trans_mat import load_trans_mat, trans_mat_num
 from trails.combine_states import combine_states
-from trails.get_tab_introgression import get_tab_ABC_introgression
+from trails.get_tab_introgression import get_tab_AB_introgression, get_tab_ABC_introgression
+from trails.get_times import get_times
+from trails.get_tab import precomp
 
 
 
@@ -62,6 +64,12 @@ def get_joint_prob_mat_introgression(
         Number of intervals of the three-sequence CTMC (ABC)
     """
 
+    # Calculate cutpoints
+    if isinstance(cut_AB, str):
+        cut_AB = cutpoints_AB(n_int_AB, t_AB, coal_AB)
+    intervals_AB = get_times(cut_AB, list(range(len(cut_AB))))
+    intervals_BC = [intervals_AB[0]+t_m]+intervals_AB[1:]
+
     ####################################
     ### Load state-space information ###
     ####################################
@@ -96,7 +104,10 @@ def get_joint_prob_mat_introgression(
     trans_mat_B = trans_mat_num(trans_mat_1, coal_B, rho_B)
     trans_mat_C = trans_mat_num(trans_mat_1, coal_C, rho_C)
     trans_mat_AB = trans_mat_num(trans_mat_2, coal_AB, rho_AB)
+    pr_AB = precomp(trans_mat_AB, intervals_AB)
     trans_mat_BC = trans_mat_num(trans_mat_2, coal_BC, rho_AB)
+    pr_BC = precomp(trans_mat_BC, intervals_BC)
+
 
     ##########################
     ### One-sequence CTMCs ###
@@ -132,8 +143,6 @@ def get_joint_prob_mat_introgression(
     (comb_BC_name_full, comb_BC_value_full) = combine_states(state_space_A, state_space_B_right[0:2], final_C, final_B_right[0:2])
     # Re-order states
     pi_BC_full = [comb_BC_value_full[comb_BC_name_full.index(i)] if i in comb_BC_name_full else 0 for i in state_space_2]
-    # Calculate the final probability vector at the second speciation time
-    final_BC_full = pi_BC_full @ expm(trans_mat_BC*(t_AB+t_m))
     # Obtain the correct state space for BC
     state_space_BC = [j.replace('1', '4') for j in state_space_2]
     state_space_BC = [j.replace('3', '6') for j in state_space_BC]
@@ -147,12 +156,12 @@ def get_joint_prob_mat_introgression(
     (trans_mat_2_miss, state_space_2_miss) = load_trans_mat_miss()
     state_space_BC_miss = [literal_eval(i) for i in state_space_2_miss]
     trans_mat_BC_miss = trans_mat_num(trans_mat_2_miss, coal_BC, rho_AB)
+    pr_BC_miss = precomp(trans_mat_BC_miss, intervals_BC)
     # Combine the state space of the migrated B lineages with the state space of C
     (comb_BC_name_miss, comb_BC_value_miss) = combine_states(state_space_C, state_space_B_right[2::], final_C, final_B_right[2::])
     # Re-order states
     pi_BC_miss = [comb_BC_value_miss[comb_BC_name_miss.index(i)] if i in comb_BC_name_miss else 0 for i in state_space_2_miss]
-    # Calculate the final probability vector at the second speciation time
-    final_BC_miss = pi_BC_miss @ expm(trans_mat_BC_miss*(t_AB+t_m))
+
 
     #-#-# Left path, from migration event to second speciation event #-#-#
 
@@ -165,8 +174,7 @@ def get_joint_prob_mat_introgression(
     (comb_AB_name_full, comb_AB_value_full) = combine_states(state_space_A, state_space_B_left[0:2], final_A, final_B_left_full)
     # Re-order states
     pi_AB_full = [comb_AB_value_full[comb_AB_name_full.index(i)] if i in comb_AB_name_full else 0 for i in state_space_2]
-    # Calculate the final probability vector at the second speciation time
-    final_AB_full = pi_AB_full @ expm(trans_mat_AB*t_AB)
+    state_space_AB = [literal_eval(i) for i in state_space_2]
 
     # # Missing lineages # #
     # This is when at least one of either the left or the right sites are missing a B lineage
@@ -175,31 +183,24 @@ def get_joint_prob_mat_introgression(
     # It is the same as for the right path, but with A instead of C.
     (trans_mat_4, state_space_4) = load_trans_mat_miss()
     trans_mat_AB_miss = trans_mat_num(trans_mat_4, coal_AB, rho_AB)
+    pr_AB_miss = precomp(trans_mat_AB_miss, intervals_AB)
     state_space_4 = [i.replace('4', '1') for i in state_space_4]
     state_space_4 = [i.replace('6', '3') for i in state_space_4]
     state_space_AB_miss = [sorted(literal_eval(i)) for i in state_space_4]
     state_space_4 = [str(i) for i in state_space_AB_miss]
-
     # Combine the state space of the non-migrated B lineages with the state space of A
     (comb_AB_name_miss, comb_AB_value_miss) = combine_states(state_space_A, state_space_B_left[2::], final_A, final_B_left[2::])
     # Re-order states
     pi_AB_miss = [comb_AB_value_miss[comb_AB_name_miss.index(i)] if i in comb_AB_name_miss else 0 for i in state_space_4]
-    # Calculate the final probability vector at the second speciation time
-    final_AB_miss  = pi_AB_miss @ expm(trans_mat_AB_miss*t_AB)
 
-    ###########################
-    ### Three-sequence CTMC ###
-    ###########################
-
-    # In order to obtain the starting probabilities, we will first mix the end probabilities of the previous CTMCs
-    ordered_pi_ABC = mix_probs(
-        state_space_AB_miss, state_space_BC_miss, state_space_AB, state_space_BC, state_space_A, state_space_C,
-        state_space_ABC, 
-        final_AB_miss, final_BC_miss, final_AB_full, final_BC_full, final_A_bis, final_C_bis
-        )
-    
-    # Now we can divide the starting probabilities by the path taken
-    (tab, tab_names) = divide_starting_probs(ordered_pi_ABC, state_space_ABC)
+    tab, tab_names = get_tab_AB_introgression(
+        state_space_AB, state_space_AB_miss, state_space_BC, state_space_BC_miss,
+        state_space_A, state_space_C, state_space_ABC,
+        pi_AB_full, pi_AB_miss, pi_BC_full, pi_BC_miss,
+        final_A_bis, final_C_bis,
+        pr_AB, pr_AB_miss, pr_BC, pr_BC_miss,
+        n_int_AB
+    )
 
     trans_mat_ABC = trans_mat_num(trans_mat_3, coal_ABC, rho_ABC)
     # Calculate cutpoints
@@ -207,7 +208,9 @@ def get_joint_prob_mat_introgression(
         cut_ABC = cutpoints_ABC(n_int_ABC, coal_ABC)
     joint_mat = get_tab_ABC_introgression(state_space_ABC, trans_mat_ABC, cut_ABC, tab, tab_names, n_int_AB, tmp_path)
 
+
     return joint_mat
+
 
 def split_migration(state_space, prob_vec, m, direction):
     """
@@ -272,91 +275,6 @@ def load_trans_mat_miss():
         '[(0, 6), (4, 0)]',
         '[(4, 6)]']
     return (mat, st)
-
-def mix_probs(
-        state_space_AB_miss, state_space_BC_miss, state_space_AB, state_space_BC, state_space_A, state_space_C,
-        state_space_ABC, 
-        final_AB_miss, final_BC_miss, final_AB_full, final_BC_full, final_A_bis, final_C_bis
-        ):
-    """
-    This function mixes the probabilities of all CTMCs when reaching 
-    the second speciation event to get the starting probabilities
-    of the three-sequence CTMC in deep time. 
-
-    Parameters
-    ----------
-    state_space_* : list of lists of tuples
-        The state space for...
-            *AB_miss (the left path when one B lineage is missing)
-            *BC_miss (the right path when one B lineage is missing)
-            *AB (the right path when no B lineages are missing)
-            *BC (the left path when no B lineages are missing)
-            *A (the one-sequence CTMC for A) 
-            *C (the one-sequence CTMC for C)
-            *ABC (the three-sequence CTMC deep in time)
-    final_* : list of floats
-        The final probabilities for...
-            *AB_miss (the left path when one B lineage is missing)
-            *BC_miss (the right path when one B lineage is missing)
-            *AB_full (the right path when no B lineages are missing)
-            *BC_full (the left path when no B lineages are missing)
-            *A_bis (the one-sequence CTMC for A, from present to second speciatione event)
-            *C_bis (the one-sequence CTMC for C, from present to second speciatione event)
-            
-    """
-    
-    # Define empty lists
-    lst_a = []
-    lst_b = []
-
-    # Mix probabilities for all possible combinations
-
-    (a, b) = combine_states(
-        state_space_AB_miss[5::], state_space_BC_miss[0:5], 
-        final_AB_miss[5::], final_BC_miss[0:5]/sum(final_BC_miss[0:5]))
-    lst_a = lst_a+a
-    lst_b = lst_b+b
-    
-    (a, b) = combine_states(
-        state_space_AB_miss[5::], state_space_BC_miss[0:5], 
-        final_AB_miss[5::]/sum(final_AB_miss[5::]), final_BC_miss[0:5])
-    lst_a = lst_a+a
-    lst_b = lst_b+b
-
-    (a, b) = combine_states(
-        state_space_AB_miss[0:5], state_space_BC_miss[5::], 
-        final_AB_miss[0:5], final_BC_miss[5::]/sum(final_BC_miss[5::]))
-    lst_a = lst_a+a
-    lst_b = lst_b+b
-
-    (a, b) = combine_states(
-        state_space_AB_miss[0:5], state_space_BC_miss[5::], 
-        final_AB_miss[0:5]/sum(final_AB_miss[0:5]), final_BC_miss[5::])
-    lst_a = lst_a+a
-    lst_b = lst_b+b
-
-    (a, b) = combine_states(state_space_AB, state_space_C, final_AB_full, final_C_bis)
-    lst_a = lst_a+a
-    lst_b = lst_b+b
-
-    (a, b) = combine_states(state_space_BC, state_space_A, final_BC_full, final_A_bis)
-    lst_a = lst_a+a
-    lst_b = lst_b+b
-
-    # Sum probabilities for the same state across combinations
-
-    dct = {}
-    for i in range(len(lst_a)):
-        if lst_a[i] not in dct:
-            dct[lst_a[i]] = lst_b[i]
-        else:
-            dct[lst_a[i]] += lst_b[i]
-
-    # Get ordered final probabilities
-
-    ordered_pi_ABC = [list(dct.values())[list(dct.keys()).index(str(i))] if str(i) in list(dct.keys()) else 0 for i in state_space_ABC]
-
-    return ordered_pi_ABC
 
 def divide_starting_probs(ordered_pi_ABC, state_space_ABC):
     """
