@@ -563,6 +563,12 @@ def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
         t_B = t_C = t_1-t_m
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
         t_out = t_1 + t_2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
+    if len(arg_lst) == 10:
+        t_1, t_C, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
+        t_A = t_1
+        t_B = t_1-t_m
+        cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
+        t_out = t_1 + t_2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
     elif len(arg_lst) == 12:
         t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
     elif len(arg_lst) == 11:
