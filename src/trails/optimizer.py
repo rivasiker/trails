@@ -873,4 +873,47 @@ def optimizer_introgression(optim_params, fixed_params, V_lst, res_name, method 
         bounds = bnds, 
         options = options
     )
+
+def optimizer_introgression_new_method(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead', header = True, tmp_path = './'):
+    """
+    Optimization function. 
+    
+    Parameters
+    ----------
+    optim_params : dictionary
+        Dictionary containing the initial values for the 
+        parameters to be optimized, and their optimization
+        bounds. The structure of the dictionary should be
+        as follows: 
+            dct['variable'] = [initial_value, lower_bound, upper_bound]
+        The dictionary must contain either 8 (t_1, t_2, t_upper, t_m, N_AB, N_ABC, r, m),
+        10 (t_A, t_B, t_C, t_2, t_upper, t_m, N_AB, N_ABC, r, m),
+        or 11 (t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_ABC, r, m) entries,
+        in that specific order. 
+    fixed params : dictionary
+        Dictionary containing the values for the fixed parameters.
+        The dictionary must contain entries n_int_AB and n_int_ABC (in no particular order).
+    V_lst : list of numpy arrays
+        List of arrays of integers corresponding to the the observed states.
+    res_name : str
+        Location and name of the gile where the results should be 
+        saved (in csv format).
+    """
+    init_params = np.array([i[0] for i in optim_params.values()])
+    bnds = [(i[1], i[2]) for i in optim_params.values()]
+    if header:
+        write_list(['n_eval'] + list(optim_params.keys()) + ['loglik', 'time'], res_name)
+    options = {
+        'maxiter': 10000,
+        'disp': True
+    }
+        
+    res = minimize(
+        optimization_wrapper_introgression_new_method, 
+        x0 = init_params,
+        args = (fixed_params, V_lst, res_name, {'Nfeval': 0, 'time': time.time(), 'tmp_path': tmp_path}),
+        method = method,
+        bounds = bnds, 
+        options = options
+    )
     
