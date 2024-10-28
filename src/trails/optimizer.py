@@ -6,8 +6,9 @@ from trails.get_joint_prob_mat_introgression import get_joint_prob_mat_introgres
 from scipy.optimize import minimize
 from trails.cutpoints import cutpoints_ABC
 from numba import njit
+from trails.read_data import get_obs_state_dct_new_method
 import time
-from trails.read_data import get_idx_state
+from trails.read_data import get_idx_state, get_idx_state_new_method
 from numba.typed import List
 from ray.util.multiprocessing import Pool
 import multiprocessing as mp
@@ -64,6 +65,38 @@ def loglik_wrapper_par(a, b, pi, V_lst):
         acc += i
     return acc
 
+def loglik_wrapper_par_new_method(a, b, pi, V_lst):
+    """
+    Log-likelihood wrapper (parallelized)
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : list of numpy arrays
+        List of vectors of observed states, as integer indices
+    """
+    order = list()
+    for i in range(125):
+        order.append(get_idx_state_new_method(i))
+    pool_lst = []
+    for i in range(len(V_lst)):
+        pool_lst.append((a, b, pi, V_lst[i], order))
+    try:
+        ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+    except KeyError:
+        ncpus = mp.cpu_count()
+    pool = Pool(ncpus)
+    res = pool.starmap_async(forward_loglik_par, pool_lst)
+    acc = 0
+    for i in res.get():
+        acc += i
+    return acc
+
 def loglik_wrapper(a, b, pi, V_lst):
     """
     Log-likelihood wrapper.
@@ -82,6 +115,34 @@ def loglik_wrapper(a, b, pi, V_lst):
     order = List()
     for i in range(624+1):
         order.append(get_idx_state(i))
+    acc = 0
+    prev_time = time.time()
+    events_count = len(V_lst)
+    for i in range(len(V_lst)):
+        acc += forward_loglik(a, b, pi, V_lst[i], order)
+        if (time.time() - prev_time) > 1:
+            # print('{}%'.format(round(100*(i/events_count), 3)), end = '\r')
+            prev_time = time.time()   
+    return acc
+
+def loglik_wrapper(a, b, pi, V_lst):
+    """
+    Log-likelihood wrapper.
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : list of numpy arrays
+        List of vectors of observed states, as integer indices
+    """
+    order = List()
+    for i in range(125):
+        order.append(get_idx_state_new_method(i))
     acc = 0
     prev_time = time.time()
     events_count = len(V_lst)
@@ -470,6 +531,130 @@ def trans_emiss_calc_introgression(
     
     return a, b, pi, hidden_names, observed_names
 
+def trans_emiss_calc_introgression_new_method(
+        t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m, n_int_AB, n_int_ABC,
+        cut_AB = 'standard', cut_ABC = 'standard', tmp_path = './'):
+    """
+    This function calculates the emission and transition probabilities
+    given a certain set of parameters. 
+    
+    Parameters
+    ----------
+    t_A : numeric
+        Time in generations from present to the first speciation event for species A
+        (times mutation rate)
+    t_B : numeric
+        Time in generations from present to the migration event for species B
+        (times mutation rate)
+    t_C : numeric
+        Time in generations from present to the migration event for species C
+        (times mutation rate)
+    t_2 : numeric
+        Time in generations from the first speciation event to the second speciation event
+        (times mutation rate)
+    t_upper : numeric
+        Time in generations between the end of the second-to-last interval and the third
+        speciation event (times mutation rate)
+    t_out : numeric
+        Time in generations from present to the third speciation event for species D, plus
+        the divergence between the ancestor of D and the ancestor of A, B and C at the time
+        of the third speciation event (times mutation rate)
+    t_m : numeric
+        Time in generagions from admixture time until first speciation time
+    N_AB : numeric
+        Effective population size between speciation events (times mutation rate) for AB
+    N_BC : numeric
+        Effective population size between speciation events (times mutation rate) for BC
+    N_ABC : numeric
+        Effective population size in deep coalescence, before the second speciation event
+        (times mutation rate)
+    r : numeric
+        Recombination rate per site per generation (divided by mutation rate)
+    m : numeric
+        Migration rate (admixture proportion)
+    n_int_AB : integer
+        Number of discretized time intervals between speciation events
+    n_int_ABC : integer
+        Number of discretized time intervals in deep coalescent
+    """
+
+    # Reference Ne (for normalization)
+    N_ref = N_ABC
+    # Speciation times (in coalescent units, i.e. number of generations / N_ref)
+    t_A = t_A/N_ref
+    t_B = t_B/N_ref
+    t_AB = t_2/N_ref
+    t_C = t_C/N_ref
+    t_upper = t_upper/N_ref
+    t_out = t_out/N_ref
+    t_m = t_m/N_ref
+    # Recombination rates (r = rec. rate per site per generation)
+    rho_A = N_ref*r
+    rho_B = N_ref*r
+    rho_AB = N_ref*r
+    rho_C = N_ref*r
+    rho_ABC = N_ref*r
+    # Coalescent rates
+    coal_A = N_ref/N_AB
+    coal_B = N_ref/N_AB
+    coal_AB = N_ref/N_AB
+    coal_BC = N_ref/N_BC
+    coal_C = N_ref/N_BC
+    coal_ABC = N_ref/N_ABC
+    # Mutation rates (mu = mut. rate per site per generation)
+    mu_A = N_ref*(4/3)
+    mu_B = N_ref*(4/3)
+    mu_C = N_ref*(4/3)
+    mu_D = N_ref*(4/3)
+    mu_AB = N_ref*(4/3)
+    mu_ABC = N_ref*(4/3)
+        
+    tr = get_joint_prob_mat_introgression(
+        t_A,    t_B,    t_AB,    t_C,    t_m,
+        rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
+        coal_A, coal_B, coal_AB, coal_BC, coal_C, coal_ABC,
+        m,
+        n_int_AB, n_int_ABC, 
+        cut_AB, cut_ABC, tmp_path)
+    tr = pd.DataFrame(tr, columns=['From', 'To', 'Prob']).pivot(index = ['From'], columns = ['To'], values = ['Prob'])
+    tr.columns = tr.columns.droplevel()
+    hidden_names = list(tr.columns)
+    hidden_names = dict(zip(range(len(hidden_names)), hidden_names))
+    arr = np.array(tr).astype(np.float64)
+    pi = arr.sum(axis=1)
+    a = arr/pi[:,None]
+    
+    em = get_emission_prob_mat_introgression(
+        t_A,    t_B,    t_AB,    t_C,    t_upper,   t_out,   t_m, 
+        rho_A,  rho_B,  rho_AB,  rho_C,  rho_ABC, 
+        coal_A, coal_B, coal_AB, coal_BC, coal_C, coal_ABC,
+        n_int_AB, n_int_ABC,
+        mu_A, mu_B, mu_C, mu_D, mu_AB, mu_ABC
+    )
+    em.hidden_state = em.hidden_state.astype("category")
+    em.hidden_state.cat.set_categories(hidden_names)
+    em = em.sort_values(["hidden_state"])
+    em = em.iloc[: , 1:]
+    observed_names = list(em.columns)
+    observed_names = dict(zip(range(len(observed_names)), observed_names))
+    b = np.array(em)
+
+    new_dct = {}
+    for i in observed_names:
+        new_obs = observed_names[i][0:2]+observed_names[i][3]
+        if new_obs not in new_dct:
+            new_dct[new_obs] = [i]
+        else:
+            new_dct[new_obs].append(i)
+
+    new_emissions = np.zeros((len(hidden_names), len(new_dct)))
+    new_observed_states = {}
+    for i, key in enumerate(new_dct):
+        new_emissions[:,i] = b[:,new_dct[key]].sum(axis=1)
+        new_observed_states[get_obs_state_dct_new_method().index(key)] = key
+    
+    return a, new_emissions, pi, hidden_names, new_observed_states
+
 def optimization_wrapper(arg_lst, d, V_lst, res_name, info):
     # Define time model (optimized parameters)
     if len(arg_lst) == 6:
@@ -594,6 +779,52 @@ def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
         loglik = loglik_wrapper_par(a, b, pi, V_lst)
     else:
         loglik = loglik_wrapper(a, b, pi, V_lst)
+    # Write parameter estimates, likelihood and time
+    write_list([info['Nfeval']] + arg_lst.tolist() + [loglik, time.time() - info['time']], res_name)
+    # Update optimization cycle
+    info['Nfeval'] += 1
+    return -loglik
+
+def optimization_wrapper_introgression_new_method(arg_lst, d, V_lst, res_name, info):
+    # Define time model (optimized parameters)
+    if len(arg_lst) == 9:
+        t_1, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
+        t_A = t_1
+        t_B = t_C = t_1-t_m
+        cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
+        t_out = t_1 + t_2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
+    if len(arg_lst) == 10:
+        t_1, t_C, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
+        t_A = t_1
+        t_B = t_1-t_m
+        cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
+        t_out = t_1 + t_2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
+    elif len(arg_lst) == 12:
+        t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
+    elif len(arg_lst) == 11:
+        t_A, t_B, t_C, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
+        cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
+        t_out = (((t_A+(t_B+t_m))/2+t_2)+(t_C+t_m+t_2))/2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
+    # Calculate transition and emission probabilities
+    a, b, pi, hidden_names, observed_names = trans_emiss_calc_introgression_new_method(
+        t_A, t_B, t_C, t_2, t_upper, t_out, t_m, N_AB, N_BC, N_ABC, r, m,
+        d['n_int_AB'], d['n_int_ABC'], 'standard', 'standard', info['tmp_path']
+    )
+
+    # Save indices for hidden and observed states
+    if info['Nfeval'] == 0:
+        pd.DataFrame({'idx': list(hidden_names.keys()), 'hidden': list(hidden_names.values())}).to_csv('hidden_states.csv', index = False)
+        pd.DataFrame({'idx': list(observed_names.keys()), 'observed': list(observed_names.values())}).to_csv('observed_states.csv', index = False)
+    # Calculate log-likelihood
+    try:
+        ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+    except KeyError:
+        ncpus = mp.cpu_count()
+    # Calculate log-likelihood
+    if len(V_lst) >= ncpus:
+        loglik = loglik_wrapper_par_new_method(a, b, pi, V_lst)
+    else:
+        loglik = loglik_wrapper_par_new_method(a, b, pi, V_lst)
     # Write parameter estimates, likelihood and time
     write_list([info['Nfeval']] + arg_lst.tolist() + [loglik, time.time() - info['time']], res_name)
     # Update optimization cycle
