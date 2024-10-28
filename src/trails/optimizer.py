@@ -125,7 +125,7 @@ def loglik_wrapper(a, b, pi, V_lst):
             prev_time = time.time()   
     return acc
 
-def loglik_wrapper(a, b, pi, V_lst):
+def loglik_wrapper_new_method(a, b, pi, V_lst):
     """
     Log-likelihood wrapper.
     
@@ -824,7 +824,7 @@ def optimization_wrapper_introgression_new_method(arg_lst, d, V_lst, res_name, i
     if len(V_lst) >= ncpus:
         loglik = loglik_wrapper_par_new_method(a, b, pi, V_lst)
     else:
-        loglik = loglik_wrapper_par_new_method(a, b, pi, V_lst)
+        loglik = loglik_wrapper_new_method(a, b, pi, V_lst)
     # Write parameter estimates, likelihood and time
     write_list([info['Nfeval']] + arg_lst.tolist() + [loglik, time.time() - info['time']], res_name)
     # Update optimization cycle
