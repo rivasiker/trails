@@ -742,13 +742,20 @@ def optimizer(optim_params, fixed_params, V_lst, res_name, method = 'Nelder-Mead
 
 def optimization_wrapper_introgression(arg_lst, d, V_lst, res_name, info):
     # Define time model (optimized parameters)
-    if len(arg_lst) == 9:
+    if "proportional" in d:
+        t_1, t_2, t_upper, t_m_prop, N_AB, N_BC, N_ABC, r, m = arg_lst
+        t_A = t_1
+        t_m = t_1*t_m_prop
+        t_B = t_C = t_1-t_m
+        cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
+        t_out = t_1 + t_2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
+    elif len(arg_lst) == 9:
         t_1, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
         t_A = t_1
         t_B = t_C = t_1-t_m
         cut_ABC = cutpoints_ABC(d['n_int_ABC'], 1)
         t_out = t_1 + t_2 + cut_ABC[d['n_int_ABC']-1]*N_ABC + t_upper + 2*N_ABC
-    if len(arg_lst) == 10:
+    elif len(arg_lst) == 10:
         t_1, t_C, t_2, t_upper, t_m, N_AB, N_BC, N_ABC, r, m = arg_lst
         t_A = t_1
         t_B = t_1-t_m
