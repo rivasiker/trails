@@ -266,7 +266,7 @@ def post_prob_wrapper(a, b, pi, V_lst):
     return res_lst
 
 @njit
-def viterbi_old(a, b, pi, V):
+def viterbi_old(a, b, pi, V, order):
     """
     Viterbi path
     
@@ -284,11 +284,11 @@ def viterbi_old(a, b, pi, V):
     T = V.shape[0]
     M = a.shape[0]
     omega = np.zeros((T, M))
-    omega[0, :] = np.log(pi * b[:, V[0]])
+    omega[0, :] = np.log(pi * b[:, order[V[0]]].sum(axis = 1))
     prev = np.zeros((T - 1, M))
     for t in range(1, T):
         for j in range(M):
-            probability = omega[t - 1] + np.log(a[:, j]) + np.log(b[j, V[t]])
+            probability = omega[t - 1] + np.log(a[:, j]) + np.log(b[j, order[V[t]]].sum(axis = 1))
             prev[t - 1, j] = np.argmax(probability)
             omega[t, j] = np.max(probability)
     S = np.zeros(T)
