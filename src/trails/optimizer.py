@@ -266,7 +266,7 @@ def post_prob_wrapper(a, b, pi, V_lst):
     return res_lst
 
 @njit
-def viterbi(a, b, pi, V):
+def viterbi_old(a, b, pi, V):
     """
     Viterbi path
     
@@ -301,6 +301,69 @@ def viterbi(a, b, pi, V):
         backtrack_index += 1
     S = np.flip(S)
     return S
+
+def viterbi(a, b, pi, V, order):
+    """
+    Viterbi path
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : numpy array
+        Vector of observed states
+    """
+    T = V.shape[0]
+    M = a.shape[0]
+    omega = np.zeros((T, M))
+    omega[0, :] = np.log(pi * b[:, V[0]])
+    prev = np.zeros((T - 1, M))
+    for t in range(1, T):
+        probability_matrix = omega[t - 1][:, np.newaxis] + np.log(a) + np.log(b[:, order[V[t]]].sum(axis = 1))
+        prev[t - 1, :] = np.argmax(probability_matrix, axis=0)
+        omega[t, :] = np.max(probability_matrix, axis=0)
+    return omega, prev
+
+def backtrack_viterbi(T, omega, prev):
+    T = omega.shape[0]
+    S = np.zeros(T)
+    last_state = np.argmax(omega[T - 1, :])
+    S[0] = last_state
+    backtrack_index = 1
+    for i in range(T - 2, -1, -1):
+        S[backtrack_index] = prev[i, int(last_state)]
+        last_state = prev[i, int(last_state)]
+        backtrack_index += 1
+    S = np.flip(S)
+    return S
+
+def viterbi_wrapper(a, b, pi, V_lst):
+    """
+    Posterior probability wrapper.
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : list of numpy arrays
+        List of vectors of observed states, as integer indices
+    """
+    res_lst = []
+    order = List()
+    for i in range(624+1):
+        order.append(get_idx_state(i))
+    for i in range(len(V_lst)):
+        (omega, prev) = viterbi(a, b, pi, V_lst[i], order)
+        res_lst.append(backtrack_viterbi(omega, prev))
+    return res_lst
 
 def write_list(lst, res_name):
     """
