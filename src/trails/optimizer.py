@@ -328,7 +328,7 @@ def viterbi(a, b, pi, V, order):
         omega[t, :] = np.max(probability_matrix, axis=0)
     return omega, prev
 
-def backtrack_viterbi(T, omega, prev):
+def backtrack_viterbi(omega, prev):
     T = omega.shape[0]
     S = np.zeros(T)
     last_state = np.argmax(omega[T - 1, :])
