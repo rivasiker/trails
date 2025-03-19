@@ -288,7 +288,7 @@ def viterbi_old(a, b, pi, V, order):
     prev = np.zeros((T - 1, M))
     for t in range(1, T):
         for j in range(M):
-            probability = omega[t - 1] + np.log(a[:, j]) + np.log(b[j, order[V[t]]].sum(axis = 1))
+            probability = omega[t - 1] + np.log(a[:, j]) + np.log(b[j, order[V[t]]].sum())
             prev[t - 1, j] = np.argmax(probability)
             omega[t, j] = np.max(probability)
     S = np.zeros(T)
