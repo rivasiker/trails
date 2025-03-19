@@ -320,7 +320,7 @@ def viterbi(a, b, pi, V, order):
     T = V.shape[0]
     M = a.shape[0]
     omega = np.zeros((T, M))
-    omega[0, :] = np.log(pi * b[:, order[V[t]]].sum(axis = 1))
+    omega[0, :] = np.log(pi * b[:, order[V[0]]].sum(axis = 1))
     prev = np.zeros((T - 1, M))
     for t in range(1, T):
         probability_matrix = omega[t - 1][:, np.newaxis] + np.log(a) + np.log(b[:, order[V[t]]].sum(axis = 1))
