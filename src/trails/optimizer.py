@@ -352,7 +352,6 @@ def viterbi_old(a, b, pi, V, order):
     S = np.flip(S)
     return S
 
-@njit
 def viterbi(a, b, pi, V, order):
     """
     Viterbi path
@@ -379,7 +378,6 @@ def viterbi(a, b, pi, V, order):
         omega[t, :] = np.max(probability_matrix, axis=0)
     return omega, prev
 
-@njit
 def backtrack_viterbi(omega, prev):
     T = omega.shape[0]
     S = np.zeros(T)
