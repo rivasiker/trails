@@ -265,6 +265,56 @@ def post_prob_wrapper(a, b, pi, V_lst):
         res_lst.append(post_prob(a, b, pi, V_lst[i], order))
     return res_lst
 
+def post_prob_par(a, b, pi, V, order):
+    """
+    Log-likelihood (parallelized)
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : numpy array
+        Vector of observed states, as integer indices
+    """
+    order = List(order)
+    return post_prob(a, b, pi, V, order)
+
+def post_prob_wrapper_par(a, b, pi, V_lst):
+    """
+    Posterior decoding wrapper (parallelized)
+    
+    Parameters
+    ----------
+    a : numpy array
+        Transition probability matrix
+    b : numpy array
+        Emission probability matrix
+    pi : numpy array
+        Vector of starting probabilities of the hidden states
+    V : list of numpy arrays
+        List of vectors of observed states, as integer indices
+    """
+    order = list()
+    for i in range(624+1):
+        order.append(get_idx_state(i))
+    pool_lst = []
+    for i in range(len(V_lst)):
+        pool_lst.append((a, b, pi, V_lst[i], order))
+    try:
+        ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+    except KeyError:
+        ncpus = mp.cpu_count()
+    pool = Pool(ncpus)
+    res = pool.starmap_async(post_prob_par, pool_lst)
+    acc = []
+    for i in res.get():
+        acc.append(i)
+    return acc
+
 @njit
 def viterbi_old(a, b, pi, V, order):
     """
