@@ -2,6 +2,14 @@
 
 TRAILS is a coalescent hidden Markov model (HMM) that reconstructs demographic parameters (ancestral Ne and split times) for three species and an outgroup. After model fitting, TRAILS can also perform posterior decoding to identify incomplete lineage sorting fragments. The original method is described in [Rivas-González et al. 2024](https://doi.org/10.1371/journal.pgen.1010836).
 
+**:warning: WARNING! :warning:**
+
+TRAILS has been re-implemented as iTRAILS, which is available at: [https://github.com/trails-phylogeny/itrails](https://github.com/trails-phylogeny/itrails). 
+
+iTRAILS is a more efficient and user-friendly implementation of the original algorithm. Comprehensive documentation, including step-by-step instructions, is available at: [https://itrails.readthedocs.io/en/docs-stable/](https://itrails.readthedocs.io/en/docs-stable/).
+
+Unless you have a strong reason to use the original TRAILS codebase, **we strongly recommend using iTRAILS instead**.
+
 ## Instalation
 
 The necessary packages for running trails can be installed through conda:
